@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { Lightbox } from '../components/Lightbox';
@@ -33,6 +33,29 @@ export default function CaseFile() {
     noindex: !post,
   });
 
+  // Structured data for search engines (a public case file is an anonymous forum-style post).
+  useEffect(() => {
+    if (!post) return;
+    const el = document.createElement('script');
+    el.type = 'application/ld+json';
+    el.id = 'ld-case';
+    el.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'DiscussionForumPosting',
+      headline: post.title,
+      articleBody: post.excerpt,
+      datePublished: post.publishedAt ?? undefined,
+      url: `${location.origin}/case/${post.id}`,
+      inLanguage: 'en',
+      keywords: [post.category?.name, ...post.tags].filter(Boolean).join(', '),
+      author: { '@type': 'Organization', name: 'Anonymous contributor' },
+      interactionStatistic: { '@type': 'InteractionCounter', interactionType: 'https://schema.org/CommentAction', userInteractionCount: post.commentCount },
+      image: post.images[0]?.large,
+    });
+    document.head.appendChild(el);
+    return () => el.remove();
+  }, [post]);
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -51,8 +74,8 @@ export default function CaseFile() {
   const mine = Boolean(storage.getPostKey(post.id));
 
   return (
-    <article className="pb-24 lg:pb-0">
-      <Link to="/" className="chrome mb-4 inline-flex items-center gap-1 py-1 text-sm font-bold text-ink-soft">
+    <article className="pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <Link to="/" className="chrome mb-4 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex">
         <Icon name="chevronLeft" size={18} /> Case files
       </Link>
 
@@ -110,7 +133,7 @@ export default function CaseFile() {
       <Statements postId={post.id} composerOpen={composer} setComposerOpen={setComposer} />
 
       {/* Phone action bar: always one tap away from adding a statement, sharing or managing your case */}
-      <div className="fixed inset-x-0 bottom-[calc(4.6rem+env(safe-area-inset-bottom))] z-30 border-t border-black/10 bg-[#f8f4ea] px-3 py-2.5 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-[#f8f4ea] px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         <div className="mx-auto flex max-w-lg gap-2">
           <button className="btn-primary flex-1" onClick={() => setComposer(true)}><Icon name="chat" size={19} /> Add statement</button>
           <ShareButton postId={post.id} title={post.title} iconOnly />

@@ -1,7 +1,8 @@
-import { Suspense, useEffect } from 'react';
-import { Link, NavLink, useLocation, useOutlet } from 'react-router-dom';
+import { Suspense, useEffect, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { cx } from '../lib/util';
 import { ConnectionBanner } from './ConnectionBanner';
+import { HelpSheet } from './HelpSheet';
 import { Icon, IconName, LogoMark } from './Icon';
 import { OfflineBar, UpdateToast, usePwa } from './Pwa';
 import { haptic } from './ui';
@@ -9,7 +10,7 @@ import { haptic } from './ui';
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <Link to="/" className="chrome flex items-center gap-2.5 rounded-xl" aria-label="DetectiveLanka home">
-      <LogoMark size={compact ? 34 : 42} className="shrink-0" />
+      <LogoMark size={compact ? 32 : 42} className="shrink-0" />
       <span className="font-display leading-none font-bold tracking-tight text-ink">
         <span className={compact ? 'text-lg' : 'text-xl'}>
           Detective<span className="text-brand-600">Lanka</span>
@@ -25,7 +26,14 @@ const nav: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/my-cases', label: 'My cases', icon: 'folders' },
   { to: '/guidelines', label: 'Code of conduct', icon: 'scale' },
   { to: '/about', label: 'Privacy', icon: 'shieldCheck' },
+  { to: '/status', label: 'System status', icon: 'pulse' },
 ];
+
+/** Screens reached from the bottom tabs. Everything else is a "detail" screen and gets a Back button in the top bar. */
+const ROOTS = ['/', '/my-cases', '/guidelines', '/about'];
+const TITLES: [string, string][] = [['/case/', 'Case file'], ['/open-case', 'Open a case'], ['/edit/', 'Manage case'], ['/status', 'System status']];
+/** Detail screens that bring their own bottom action bar (no tab bar). */
+const NO_TABS = ['/open-case', '/edit', '/case/'];
 
 function SideItem({ to, label, icon, end }: { to: string; label: string; icon: IconName; end?: boolean }) {
   return (
@@ -53,9 +61,15 @@ function TabItem({ to, label, icon, end }: { to: string; label: string; icon: Ic
 
 export function Layout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const outlet = useOutlet();
   const { installable, install, standalone } = usePwa();
-  const formRoute = pathname.startsWith('/open-case') || pathname.startsWith('/edit');
+  const [help, setHelp] = useState(false);
+  const isRoot = ROOTS.includes(pathname);
+  const hideTabs = NO_TABS.some((p) => pathname.startsWith(p));
+  const title = TITLES.find(([p]) => pathname.startsWith(p))?.[1] ?? 'Back';
+
+  const goBack = () => (typeof window.history.state?.idx === 'number' && window.history.state.idx > 0 ? navigate(-1) : navigate('/'));
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -87,20 +101,27 @@ export function Layout() {
         </div>
       </aside>
 
-      {/* Mobile: FIXED top bar (not sticky) */}
+      {/* Phones: slim FIXED top bar. Root screens show the logo; detail screens show Back + title. It never scrolls away. */}
       <header className="fixed inset-x-0 top-0 z-40 border-b border-black/10 bg-[#f8f4ea] pt-safe lg:hidden">
-        <div className="flex h-14 items-center justify-between px-4">
-          <Logo compact />
-          <Link to="/open-case" className="btn-primary !min-h-10 !rounded-full !px-4 !text-[0.82rem]">
-            <Icon name="plus" size={17} strokeWidth={2.8} /> Open Case
-          </Link>
+        <div className="flex h-12 items-center justify-between gap-2 px-2.5">
+          {isRoot ? (
+            <div className="pl-1.5"><Logo compact /></div>
+          ) : (
+            <button onClick={goBack} className="chrome flex min-h-11 items-center gap-1 rounded-xl pr-3 pl-1.5 text-[0.95rem] font-bold text-ink active:bg-black/5" aria-label="Go back">
+              <Icon name="chevronLeft" size={24} />
+              <span className="truncate">{title}</span>
+            </button>
+          )}
+          <button onClick={() => setHelp(true)} className="chrome grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" aria-label="About this app">
+            <Icon name="help" size={24} />
+          </button>
         </div>
       </header>
 
-      <div className="min-w-0 pt-[calc(3.5rem+env(safe-area-inset-top))] lg:pt-0">
+      <div className="min-w-0 pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0">
         <OfflineBar />
         <ConnectionBanner />
-        <main id="main" className={cx('mx-auto w-full max-w-5xl px-4 pt-5 sm:px-6 lg:px-10 lg:pt-10', formRoute ? 'pb-[calc(2rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-12')}>
+        <main id="main" className={cx('mx-auto w-full max-w-5xl px-4 pt-5 sm:px-6 lg:px-10 lg:pt-10', hideTabs ? 'pb-[calc(2rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-12')}>
           <div key={pathname} className="page-in">
             <Suspense fallback={<div className="space-y-4"><div className="skeleton h-10 w-1/2" /><div className="skeleton h-40 w-full" /></div>}>{outlet}</Suspense>
           </div>
@@ -108,9 +129,10 @@ export function Layout() {
       </div>
 
       <UpdateToast />
+      <HelpSheet open={help} onClose={() => setHelp(false)} />
 
-      {/* Mobile: fixed bottom tab bar */}
-      {!formRoute && (
+      {/* Phones: fixed bottom tab bar (hidden on screens that have their own action bar) */}
+      {!hideTabs && (
         <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f8f4ea] pb-safe lg:hidden">
           <div className="mx-auto flex max-w-lg items-end px-2">
             <TabItem to="/" label="Cases" icon="list" end />

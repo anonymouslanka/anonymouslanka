@@ -67,7 +67,7 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
 export function PullIndicator({ pull, refreshing }: { pull: number; refreshing: boolean }) {
   const visible = pull > 6 || refreshing;
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-20 flex justify-center lg:hidden" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-x-0 top-[calc(3rem+env(safe-area-inset-top))] z-20 flex justify-center lg:hidden" aria-hidden="true">
       <div
         className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-brand-700"
         style={{ transform: `translateY(${refreshing ? 14 : pull * 0.6}px) scale(${visible ? 1 : 0.6})`, opacity: visible ? 1 : 0, transition: pull ? 'none' : 'transform .2s, opacity .2s' }}

@@ -3,6 +3,8 @@ import type { Category, OwnerComment, OwnerPost, Page, PageMeta, PostDetail, Pos
 
 const baseURL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000/api/v1';
 
+export const API_BASE = baseURL;
+
 const http = axios.create({ baseURL, timeout: 60_000 });
 
 /** Normalised error shown to users. Never contains stack traces or server internals. */

@@ -100,7 +100,7 @@ export default function EditCase() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to="/my-cases" className="chrome mb-3 inline-flex items-center gap-1 py-1 text-sm font-bold text-ink-soft"><Icon name="chevronLeft" size={18} /> My cases</Link>
+      <Link to="/my-cases" className="chrome mb-3 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex"><Icon name="chevronLeft" size={18} /> My cases</Link>
       <div className="mb-1 flex flex-wrap items-center gap-3">
         <h1 className="font-display text-3xl font-bold">Update case file</h1>
         <StatusBadge status={post.status} />

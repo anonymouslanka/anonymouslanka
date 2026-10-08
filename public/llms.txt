@@ -1,0 +1,19 @@
+# DetectiveLanka
+
+> Anonymous, moderated case-file app for Sri Lanka. People report crime without an account, a moderator reviews each case, and cleared cases are public. Installable as a web app on iPhone, Android, Windows and Mac.
+
+## What it is
+- Report crime anonymously in Sri Lanka: fraud and scams, corruption, theft and robbery, drugs, violence, cyber crime, harassment, public safety.
+- No names, emails or phone numbers. Each case and statement gets its own secret key, stored only on the author's device.
+- Every case is reviewed by a moderator before it is public. Statements (comments, optionally with photo exhibits) are public immediately and hidden after 10 reports.
+- Not a replacement for the police: in an emergency call 119 (Sri Lanka Police).
+
+## Pages
+- [Case files](https://detectivelanka.vercel.app/): browse, search and filter public cases
+- [Privacy](https://detectivelanka.vercel.app/about): how anonymity works and its limits
+- [Code of conduct](https://detectivelanka.vercel.app/guidelines): posting rules
+- [System status](https://detectivelanka.vercel.app/status): live service status
+- [Sitemap](https://detectivelanka.vercel.app/sitemap.xml): every public case file
+
+## Keywords
+report crime anonymously Sri Lanka, anonymous tip, scam alert Sri Lanka, corruption report, cyber crime Sri Lanka, crime watch, whistleblower, අපරාධ වාර්තා කරන්න, குற்றம் புகாரளிக்க

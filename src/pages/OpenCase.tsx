@@ -38,7 +38,7 @@ export default function OpenCase() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <button onClick={() => navigate(-1)} className="chrome mb-3 inline-flex items-center gap-1 py-1 text-sm font-bold text-ink-soft">
+      <button onClick={() => navigate(-1)} className="chrome mb-3 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex">
         <Icon name="chevronLeft" size={18} /> Back
       </button>
       <h1 className="font-display text-3xl font-bold sm:text-4xl">Open a case</h1>

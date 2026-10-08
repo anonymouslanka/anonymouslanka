@@ -39,12 +39,14 @@ const paths = {
   tag: <><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9z" /><circle cx="8" cy="8" r="1.4" /></>,
   grid: <><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></>,
   flag: <><path d="M5 21V4" /><path d="M5 5c4-2 7 2 11 0 1-.5 3-1 3-1v9s-2 .5-3 1c-4 2-7-2-11 0" /></>,
+  help: <><circle cx="12" cy="12" r="9" /><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.2 1-1.2 1.9M12 17h.01" /></>,
+  pulse: <path d="M3 12h4l2.5-7 4 14 2.5-7H21" />,
   inbox: <><path d="M3 13l3-8h12l3 8" /><path d="M3 13v6a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-6h-5a3 3 0 0 1-6 0H3z" /></>,
 } as const;
 
 export type IconName = keyof typeof paths;
 
-const TINTED = new Set<IconName>(['folder', 'folderPlus', 'folders', 'file', 'chat', 'image', 'shield', 'shieldCheck', 'clock', 'key', 'lock', 'tag', 'inbox', 'grid', 'copy', 'info', 'alert']);
+const TINTED = new Set<IconName>(['folder', 'folderPlus', 'folders', 'file', 'chat', 'image', 'shield', 'shieldCheck', 'clock', 'key', 'lock', 'tag', 'inbox', 'grid', 'copy', 'info', 'alert', 'help']);
 
 export function Icon({ name, size = 20, strokeWidth = 2.3, ...rest }: { name: IconName; size?: number } & Omit<SVGProps<SVGSVGElement>, 'name'>) {
   const tint = TINTED.has(name);

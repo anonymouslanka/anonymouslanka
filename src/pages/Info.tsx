@@ -67,6 +67,7 @@ export function About() {
         {standalone && <p className="font-semibold text-emerald-700">You are running the installed app.</p>}
       </Article>
       <p className="pt-2"><Link to="/guidelines" className="inline-flex items-center gap-1 text-sm font-bold text-brand-700">Read the code of conduct <Icon name="arrowRight" size={16} /></Link></p>
+      <p><Link to="/status" className="inline-flex items-center gap-1 text-sm font-bold text-brand-700">Check system status <Icon name="arrowRight" size={16} /></Link></p>
     </Page>
   );
 }
