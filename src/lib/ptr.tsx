@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../components/Icon';
 
@@ -69,15 +68,14 @@ export function PullIndicator({ pull, refreshing }: { pull: number; refreshing: 
   const visible = pull > 6 || refreshing;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-20 flex justify-center lg:hidden" aria-hidden="true">
-      <motion.div
-        animate={{ y: refreshing ? 14 : pull * 0.6, opacity: visible ? 1 : 0, scale: visible ? 1 : 0.6 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="grid h-10 w-10 place-items-center rounded-full bg-white text-brand-700 shadow-lift"
+      <div
+        className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-brand-700"
+        style={{ transform: `translateY(${refreshing ? 14 : pull * 0.6}px) scale(${visible ? 1 : 0.6})`, opacity: visible ? 1 : 0, transition: pull ? 'none' : 'transform .2s, opacity .2s' }}
       >
-        <motion.span animate={{ rotate: refreshing ? 360 : pull * 3 }} transition={refreshing ? { repeat: Infinity, duration: 0.8, ease: 'linear' } : { duration: 0 }}>
+        <span className={refreshing ? 'animate-spin' : ''} style={{ transform: refreshing ? undefined : `rotate(${pull * 3}deg)` }}>
           <Icon name="refresh" size={20} />
-        </motion.span>
-      </motion.div>
+        </span>
+      </div>
     </div>
   );
 }

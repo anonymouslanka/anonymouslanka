@@ -10,6 +10,8 @@ const POST = 'app:post-edit:';
 const COMMENT = 'app:comment-edit:';
 const POST_INDEX = 'app:post-index';
 const COMMENT_INDEX = 'app:comment-index:'; // + postId → commentId[]
+const COMMENT_ALL = 'app:comment-all'; // every statement on this device as "postId:commentId"
+const REPORTED = 'app:reported:'; // + commentId → "1" (this device already reported it)
 
 function read(key: string): string | null {
   try {
@@ -70,13 +72,21 @@ export const storage = {
 
   saveCommentKey(postId: string, commentId: string, editKey: string): boolean {
     const ok = write(COMMENT + commentId, editKey);
-    if (ok) addTo(COMMENT_INDEX + postId, commentId);
+    if (ok) {
+      addTo(COMMENT_INDEX + postId, commentId);
+      addTo(COMMENT_ALL, `${postId}:${commentId}`);
+    }
     return ok;
   },
   getCommentKey: (commentId: string): string | null => read(COMMENT + commentId),
   removeComment(postId: string, commentId: string): void {
     drop(COMMENT + commentId);
     removeFrom(COMMENT_INDEX + postId, commentId);
+    removeFrom(COMMENT_ALL, `${postId}:${commentId}`);
   },
+  listAllComments: (): { postId: string; commentId: string }[] =>
+    readList(COMMENT_ALL).map((x) => { const [postId = '', commentId = ''] = x.split(':'); return { postId, commentId }; }),
+  hasReported: (commentId: string): boolean => read(REPORTED + commentId) === '1',
+  markReported: (commentId: string): void => { write(REPORTED + commentId, '1'); },
   listCommentIds: (postId: string): string[] => readList(COMMENT_INDEX + postId),
 };

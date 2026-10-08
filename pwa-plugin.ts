@@ -20,6 +20,9 @@ export function pwa(opts: { extraCore?: string[] } = {}): Plugin {
     '/icons/icon-192.png',
     '/icons/icon-512.png',
     '/icons/apple-touch-icon.png',
+    '/fonts/public-sans-latin-wght-normal.woff2',
+    '/fonts/bitter-latin-wght-normal.woff2',
+    '/fonts/special-elite-latin-400-normal.woff2',
     ...(opts.extraCore ?? []),
   ];
 

@@ -63,7 +63,7 @@ export function About() {
           <li><strong>Android:</strong> Chrome menu → Install app (or tap Install below).</li>
           <li><strong>Windows / Mac:</strong> Chrome or Edge → the install icon in the address bar.</li>
         </ul>
-        {installable && !standalone && <button className="btn-navy mt-2" onClick={install}><Icon name="download" size={17} /> Install now</button>}
+        {installable && !standalone && <button className="btn-primary mt-2" onClick={install}><Icon name="download" size={17} /> Install now</button>}
         {standalone && <p className="font-semibold text-emerald-700">You are running the installed app.</p>}
       </Article>
       <p className="pt-2"><Link to="/guidelines" className="inline-flex items-center gap-1 text-sm font-bold text-brand-700">Read the code of conduct <Icon name="arrowRight" size={16} /></Link></p>
@@ -99,5 +99,5 @@ export function Guidelines() {
 
 export function NotFound() {
   usePageMeta({ title: 'Page not found', noindex: true });
-  return <EmptyState icon="search" title="File not found" message="The page you are looking for doesn’t exist." action={<Link to="/" className="btn-navy">Back to case files</Link>} />;
+  return <EmptyState icon="search" title="File not found" message="The page you are looking for doesn’t exist." action={<Link to="/" className="btn-primary">Back to case files</Link>} />;
 }

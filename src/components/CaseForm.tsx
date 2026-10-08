@@ -1,8 +1,6 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { FormEvent, ReactNode, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { useAsync } from '../lib/hooks';
-import { ease, spring } from '../lib/motion';
 import type { ImageDto, OwnerPost } from '../lib/types';
 import { Icon, IconName } from './Icon';
 import { ImagePicker, MAX_IMAGES } from './ImagePicker';
@@ -10,45 +8,66 @@ import { FieldError, Spinner, useToast } from './ui';
 
 const splitTags = (s: string) => [...new Set(s.split(/[,\s]+/).map((t) => t.replace(/^#/, '').trim().toLowerCase()).filter(Boolean))];
 
+const DRAFT_KEY = 'app:draft:case';
+interface Draft { title: string; content: string; category: string; tags: string }
+const readDraft = (): Draft | null => {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? 'null') as Draft | null;
+    return d && typeof d.title === 'string' ? d : null;
+  } catch {
+    return null;
+  }
+};
+export const clearCaseDraft = (): void => {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+};
+
 function Section({ n, icon, title, hint, children }: { n: number; icon: IconName; title: string; hint?: string; children: ReactNode }) {
   return (
-    <motion.section initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-40px' }} transition={{ duration: 0.45, ease }} className="card p-5 sm:p-6">
+    <section className="card p-5 sm:p-6">
       <div className="mb-4 flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-folder text-[#7a5a14]"><Icon name={icon} size={19} /></span>
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-folder text-[#7a5a14]"><Icon name={icon} size={21} /></span>
         <div>
-          <p className="font-mono text-[0.62rem] font-bold tracking-[0.16em] text-[#9b7621] uppercase">Section {n}</p>
+          <p className="font-mono text-[0.62rem] tracking-[0.16em] text-[#9b7621] uppercase">Section {n}</p>
           <h2 className="font-display text-lg leading-tight font-bold">{title}</h2>
         </div>
       </div>
       {hint && <p className="-mt-1 mb-4 text-sm text-ink-soft">{hint}</p>}
       <div className="space-y-5">{children}</div>
-    </motion.section>
+    </section>
   );
 }
 
 /**
  * Shared "open a case" / "update case file" form. In edit mode only CHANGED fields are sent.
- * No personal information is requested anywhere.
+ * No personal information is requested anywhere. A draft is kept on this device while typing (cleared on success).
  */
 export function CaseForm({
   initial,
   busy,
+  progress,
   error,
   submitLabel,
   onSubmit,
 }: {
   initial?: OwnerPost;
   busy: boolean;
+  progress?: number | null;
   error: ApiError | null;
   submitLabel: string;
   onSubmit: (form: FormData) => void;
 }) {
   const toast = useToast();
   const categories = useAsync(() => api.categories(), []);
-  const [title, setTitle] = useState(initial?.title ?? '');
-  const [content, setContent] = useState(initial?.content ?? '');
-  const [category, setCategory] = useState(initial?.category?.slug ?? '');
-  const [tags, setTags] = useState(initial?.tags.join(', ') ?? '');
+  const draft = useRef(initial ? null : readDraft());
+  const [title, setTitle] = useState(initial?.title ?? draft.current?.title ?? '');
+  const [content, setContent] = useState(initial?.content ?? draft.current?.content ?? '');
+  const [category, setCategory] = useState(initial?.category?.slug ?? draft.current?.category ?? '');
+  const [tags, setTags] = useState(initial?.tags.join(', ') ?? draft.current?.tags ?? '');
   const [files, setFiles] = useState<File[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
   const [agree, setAgree] = useState(Boolean(initial));
@@ -56,8 +75,25 @@ export function CaseForm({
   const existing: ImageDto[] = (initial?.images ?? []).filter((i) => !removed.includes(i.id));
   const slots = MAX_IMAGES - existing.length;
 
+  // Autosave the draft (create mode only).
+  useEffect(() => {
+    if (edit) return;
+    const t = setTimeout(() => {
+      try {
+        if (title || content || tags) localStorage.setItem(DRAFT_KEY, JSON.stringify({ title, content, category, tags }));
+      } catch {
+        /* ignore */
+      }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [edit, title, content, category, tags]);
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      toast('error', 'You are offline. Your draft is saved on this device — try again when you are back online.');
+      return;
+    }
     const fd = new FormData();
     const tagList = splitTags(tags);
     if (!initial) {
@@ -79,19 +115,23 @@ export function CaseForm({
   const f = error?.fields ?? {};
 
   return (
-    <form onSubmit={submit} className="space-y-5">
+    <form onSubmit={submit} className="space-y-4">
       {!edit && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+        <div className="flex items-start gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
           <Icon name="shieldCheck" size={22} className="mt-0.5 shrink-0" />
           <p><strong>No personal information needed.</strong> No name, email or phone number — ever. You get a secret case key instead of an account, and photo location data is stripped automatically.</p>
-        </motion.div>
+        </div>
+      )}
+      {draft.current && !edit && (
+        <p className="flex items-center gap-2 rounded-xl bg-folder/50 px-3.5 py-2.5 text-xs font-semibold text-[#7a5a14]">
+          <Icon name="file" size={15} /> Restored your unsent draft from this device.
+          <button type="button" className="ml-auto underline" onClick={() => { clearCaseDraft(); setTitle(''); setContent(''); setCategory(''); setTags(''); draft.current = null; }}>Discard</button>
+        </p>
       )}
 
-      <AnimatePresence>
-        {error && !Object.keys(f).length && (
-          <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} role="alert" className="overflow-hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-900">{error.message}</motion.p>
-        )}
-      </AnimatePresence>
+      {error && !Object.keys(f).length && (
+        <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-900"><Icon name="alert" size={18} className="mt-0.5 shrink-0" /> {error.message}</p>
+      )}
 
       <Section n={1} icon="file" title="The case" hint="Stick to facts you saw or can show: what happened, where and when.">
         <div>
@@ -117,7 +157,7 @@ export function CaseForm({
             <FieldError messages={f.category} />
           </div>
           <div>
-            <label htmlFor="tags" className="label">Keywords <span className="font-normal tracking-normal normal-case">(max 5)</span></label>
+            <label htmlFor="tags" className="label">Keywords (max 5)</label>
             <input id="tags" className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="colombo, online, sms" autoCapitalize="none" />
             <FieldError messages={f.tags} />
           </div>
@@ -128,10 +168,10 @@ export function CaseForm({
         {existing.length > 0 && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {existing.map((img, i) => (
-              <div key={img.id} className="relative aspect-square overflow-hidden rounded-2xl border border-stone-200 bg-white p-1.5 shadow-sm">
+              <div key={img.id} className="relative aspect-square overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5">
                 <img src={img.thumb} alt="" crossOrigin="anonymous" className="h-full w-full rounded-xl object-cover" />
-                <span className="absolute bottom-2.5 left-2.5 rounded-md bg-ink/80 px-1.5 py-0.5 font-mono text-[0.6rem] font-bold tracking-widest text-white uppercase">Exhibit {String.fromCharCode(65 + i)}</span>
-                <button type="button" aria-label="Remove this exhibit" onClick={() => setRemoved((r) => [...r, img.id])} className="absolute top-2.5 right-2.5 grid h-8 w-8 place-items-center rounded-full bg-ink/80 text-white hover:bg-red-600"><Icon name="x" size={15} strokeWidth={2.4} /></button>
+                <span className="absolute bottom-2.5 left-2.5 rounded-md bg-ink/85 px-1.5 py-0.5 font-mono text-[0.6rem] tracking-widest text-white uppercase">Exhibit {String.fromCharCode(65 + i)}</span>
+                <button type="button" aria-label="Remove this exhibit" onClick={() => setRemoved((r) => [...r, img.id])} className="absolute top-2.5 right-2.5 grid h-9 w-9 place-items-center rounded-full bg-ink/85 text-white active:bg-red-600"><Icon name="x" size={16} strokeWidth={2.6} /></button>
               </div>
             ))}
           </div>
@@ -141,18 +181,18 @@ export function CaseForm({
       </Section>
 
       {!edit && (
-        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-sm">
-          <input type="checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand-700)]" />
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-black/10 bg-white p-4 text-sm">
+          <input type="checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand-600)]" />
           <span>I have read the <a href="/guidelines" target="_blank" className="font-bold text-brand-700 underline">code of conduct</a>. This case is truthful to the best of my knowledge and contains no private personal data (addresses, phone or ID numbers) of private individuals.</span>
         </label>
       )}
 
-      <motion.div whileTap={{ scale: 0.98 }} transition={spring} className="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-10">
+      <div className="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-10">
         <button className="btn-primary w-full !min-h-14 !rounded-2xl text-base" disabled={busy || !agree}>
-          {busy ? <Spinner /> : <Icon name={edit ? 'check' : 'folderPlus'} size={20} />}
-          {busy ? 'Filing…' : submitLabel}
+          {busy ? <Spinner /> : <Icon name={edit ? 'check' : 'folderPlus'} size={22} />}
+          {busy ? (progress != null && progress < 100 && files.length ? `Uploading ${progress}%` : 'Filing…') : submitLabel}
         </button>
-      </motion.div>
+      </div>
     </form>
   );
 }

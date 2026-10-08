@@ -3,7 +3,7 @@ import type { Category, OwnerComment, OwnerPost, Page, PageMeta, PostDetail, Pos
 
 const baseURL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000/api/v1';
 
-const http = axios.create({ baseURL, timeout: 45_000 });
+const http = axios.create({ baseURL, timeout: 60_000 });
 
 /** Normalised error shown to users. Never contains stack traces or server internals. */
 export class ApiError extends Error {
@@ -12,10 +12,27 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string,
     public readonly fields: Record<string, string[]> = {},
+    /** Seconds the server asked us to wait (rate limits / warm-up). */
+    public readonly retryAfter = 0,
   ) {
     super(message);
   }
 }
+
+const wait = (s: number) => (s >= 3600 ? `${Math.ceil(s / 3600)} hour(s)` : s >= 90 ? `${Math.ceil(s / 60)} minutes` : `${Math.max(1, Math.round(s))} seconds`);
+
+/** Friendly text for every failure the user can hit. The server's own message is used only where it is already user-safe. */
+const FRIENDLY: Record<string, string> = {
+  RATE_LIMITED: 'You are doing that too often. Please wait a little and try again.',
+  UPLOAD_FAILED: 'Your photos could not be uploaded. Nothing was saved — please try again.',
+  UPLOADS_UNAVAILABLE: 'Photo uploads are temporarily unavailable. You can submit without photos.',
+  INVALID_IMAGE: 'One of the files is not a valid image.',
+  UNSUPPORTED_FILE_TYPE: 'Only JPEG, PNG and WebP photos are allowed.',
+  PAYLOAD_TOO_LARGE: 'That is too large to send. Try fewer or smaller photos.',
+  DATABASE_UNAVAILABLE: 'The service is busy right now. Please try again in a moment.',
+  SERVICE_UNAVAILABLE: 'The service is busy right now. Please try again in a moment.',
+  INTERNAL_ERROR: 'Something went wrong on our side. Please try again.',
+};
 
 function normalize(err: unknown): ApiError {
   if (err instanceof ApiError) return err;
@@ -24,11 +41,60 @@ function normalize(err: unknown): ApiError {
     const body = e.response.data?.error;
     const fields: Record<string, string[]> = {};
     body?.details?.forEach?.((d) => (fields[d.field] = d.messages));
-    return new ApiError(body?.message ?? 'Something went wrong. Please try again.', e.response.status, body?.code ?? 'ERROR', fields);
+    const status = e.response.status;
+    const code = body?.code ?? (status === 502 || status === 503 || status === 504 ? 'SERVICE_UNAVAILABLE' : 'ERROR');
+    const retryAfter = Number(e.response.headers?.['retry-after']) || 0;
+    let message = body?.message ?? 'Something went wrong. Please try again.';
+    if (code === 'RATE_LIMITED') message = retryAfter ? `You are doing that too often. Please try again in ${wait(retryAfter)}.` : FRIENDLY.RATE_LIMITED!;
+    else if (status >= 500 || FRIENDLY[code]) message = FRIENDLY[code] ?? FRIENDLY.INTERNAL_ERROR!;
+    return new ApiError(message, status, code, fields, retryAfter);
   }
-  if (e.code === 'ECONNABORTED') return new ApiError('The request timed out. Please try again.', 0, 'TIMEOUT');
+  if (e.code === 'ECONNABORTED') return new ApiError('The server took too long to answer. Please try again.', 0, 'TIMEOUT');
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return new ApiError('You are offline. Check your connection and try again.', 0, 'NETWORK_ERROR');
   return new ApiError('Cannot reach the server. Check your connection and try again.', 0, 'NETWORK_ERROR');
 }
+
+/* ───── slow-request tracking: lets the UI say "waking up the server" instead of looking frozen ───── */
+let pending = 0;
+let slowTimer: ReturnType<typeof setTimeout> | undefined;
+const slowListeners = new Set<(slow: boolean) => void>();
+const emitSlow = (v: boolean) => slowListeners.forEach((fn) => fn(v));
+export const subscribeSlow = (fn: (slow: boolean) => void): (() => void) => {
+  slowListeners.add(fn);
+  return () => slowListeners.delete(fn);
+};
+http.interceptors.request.use((config) => {
+  if (pending++ === 0) slowTimer = setTimeout(() => emitSlow(true), 4000);
+  return config;
+});
+const settled = () => {
+  if (--pending <= 0) {
+    pending = 0;
+    clearTimeout(slowTimer);
+    emitSlow(false);
+  }
+};
+
+/** Safe GETs retry on network failures / gateway errors with backoff (covers the free host's cold start). */
+http.interceptors.response.use(
+  (res) => {
+    settled();
+    return res;
+  },
+  async (error: AxiosError) => {
+    const cfg = error.config as (typeof error.config & { __try?: number }) | undefined;
+    const status = error.response?.status ?? 0;
+    const transient = !error.response ? error.code !== 'ECONNABORTED' : [502, 503, 504].includes(status);
+    if (cfg && cfg.method === 'get' && transient && (cfg.__try ?? 0) < 3 && navigator.onLine !== false) {
+      cfg.__try = (cfg.__try ?? 0) + 1;
+      await new Promise((r) => setTimeout(r, 1200 * cfg.__try!));
+      settled(); // the retry registers itself again
+      return http.request(cfg);
+    }
+    settled();
+    throw error;
+  },
+);
 
 async function call<T>(req: Promise<{ data: { data: T; meta?: PageMeta } }>): Promise<T> {
   try {
@@ -111,15 +177,17 @@ export const api = {
       ),
     ),
   getPost: (id: string) => cached(`case:${id}`, () => call<PostDetail>(http.get(`/posts/${id}`))),
-  createPost: (form: FormData) => call<{ post: OwnerPost; editKey: string }>(http.post('/posts', form)),
+  createPost: (form: FormData, onProgress?: (pct: number) => void) =>
+    call<{ post: OwnerPost; editKey: string }>(http.post('/posts', form, { timeout: 120_000, onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)) })),
   getOwnerPost: (id: string, key: string) => call<OwnerPost>(http.get(`/posts/${id}/owner`, keyHeader(key))),
   updatePost: (id: string, key: string, form: FormData) => call<OwnerPost>(http.patch(`/posts/${id}`, form, keyHeader(key))),
   deletePost: (id: string, key: string) => call<{ deleted: true }>(http.delete(`/posts/${id}`, keyHeader(key))),
 
   listComments: (postId: string, cursor?: string | null) =>
     cached(`statements:${postId}:${cursor ?? ''}`, () => callPage<PublicComment>(http.get(`/posts/${postId}/comments`, { params: { cursor: cursor || undefined } }))),
-  createComment: (postId: string, form: FormData) =>
-    call<{ comment: OwnerComment; editKey: string }>(http.post(`/posts/${postId}/comments`, form)),
+  createComment: (postId: string, form: FormData, onProgress?: (pct: number) => void) =>
+    call<{ comment: OwnerComment; editKey: string }>(http.post(`/posts/${postId}/comments`, form, { timeout: 120_000, onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)) })),
+  reportComment: (id: string) => call<{ reported: true; hidden: boolean; duplicate?: boolean }>(http.post(`/comments/${id}/report`)),
   getOwnerComment: (id: string, key: string) => call<OwnerComment>(http.get(`/comments/${id}/owner`, keyHeader(key))),
   updateComment: (id: string, key: string, form: FormData) => call<OwnerComment>(http.patch(`/comments/${id}`, form, keyHeader(key))),
   deleteComment: (id: string, key: string) => call<{ deleted: true }>(http.delete(`/comments/${id}`, keyHeader(key))),

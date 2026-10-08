@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CaseForm } from '../components/CaseForm';
+import { CaseForm, clearCaseDraft } from '../components/CaseForm';
 import { EditKeyDialog } from '../components/EditKeyDialog';
 import { Icon } from '../components/Icon';
 import { useToast } from '../components/ui';
@@ -13,6 +13,7 @@ export default function OpenCase() {
   const navigate = useNavigate();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [created, setCreated] = useState<{ id: string; key: string; saved: boolean } | null>(null);
 
@@ -20,7 +21,8 @@ export default function OpenCase() {
     setBusy(true);
     setError(null);
     try {
-      const { post, editKey } = await api.createPost(form);
+      const { post, editKey } = await api.createPost(form, setProgress);
+      clearCaseDraft();
       const saved = storage.savePostKey(post.id, editKey);
       setCreated({ id: post.id, key: editKey, saved });
     } catch (e) {
@@ -30,17 +32,18 @@ export default function OpenCase() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   };
 
   return (
     <div className="mx-auto max-w-2xl">
-      <button onClick={() => navigate(-1)} className="chrome mb-3 inline-flex items-center gap-1 text-sm font-semibold text-ink-soft transition-colors hover:text-brand-700">
+      <button onClick={() => navigate(-1)} className="chrome mb-3 inline-flex items-center gap-1 py-1 text-sm font-bold text-ink-soft">
         <Icon name="chevronLeft" size={18} /> Back
       </button>
       <h1 className="font-display text-3xl font-bold sm:text-4xl">Open a case</h1>
       <p className="mt-1.5 mb-6 text-sm text-ink-soft">Your case file is reviewed by a moderator and appears publicly only once it is cleared. You will receive a secret case key — keep it safe.</p>
-      <CaseForm busy={busy} error={error} submitLabel="Open case" onSubmit={submit} />
+      <CaseForm busy={busy} progress={progress} error={error} submitLabel="Open case" onSubmit={submit} />
 
       <EditKeyDialog
         open={created !== null}

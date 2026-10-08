@@ -1,6 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { spring } from '../lib/motion';
 import { Icon } from './Icon';
 import { Dialog } from './ui';
 
@@ -18,7 +16,6 @@ interface PwaState {
   standalone: boolean;
   isIOS: boolean;
   canInstall: boolean;
-  /** True when installing is possible in some way (native prompt or iOS instructions). */
   installable: boolean;
   updateReady: boolean;
   install: () => Promise<void>;
@@ -72,7 +69,6 @@ export function PwaProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Service worker registration (production builds only)
   useEffect(() => {
     if (!('serviceWorker' in navigator) || import.meta.env.DEV) return;
     let cancelled = false;
@@ -146,49 +142,29 @@ export function PwaProvider({ children }: { children: ReactNode }) {
 /** Slim status strip shown when the device is offline. */
 export function OfflineBar() {
   const { online } = usePwa();
+  if (online) return null;
   return (
-    <AnimatePresence>
-      {!online && (
-        <motion.div
-          role="status"
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="overflow-hidden bg-ink text-xs font-semibold text-white"
-        >
-          <div className="flex items-center justify-center gap-2 px-4 py-2">
-            <Icon name="offline" size={14} /> You are offline — showing saved case files where available.
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div role="status" className="bg-ink px-4 py-2 text-center text-xs font-semibold text-white">
+      <span className="inline-flex items-center gap-2"><Icon name="offline" size={14} /> You are offline — showing saved case files where available.</span>
+    </div>
   );
 }
 
-/** Bottom toast offering to reload when a new version of the app has been downloaded. */
+/** Bar offering to reload when a new version of the app has been downloaded. */
 export function UpdateToast() {
   const { updateReady, applyUpdate } = usePwa();
+  if (!updateReady) return null;
   return (
-    <AnimatePresence>
-      {updateReady && (
-        <motion.div
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 80, opacity: 0 }}
-          transition={spring}
-          className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[70] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white shadow-lift lg:bottom-6"
-        >
-          <span>A new version is ready.</span>
-          <button className="rounded-lg bg-white/15 px-3 py-1.5 font-semibold transition hover:bg-white/25" onClick={applyUpdate}>
-            Update
-          </button>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className="toast-in fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[70] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white lg:bottom-6">
+      <span>A new version is ready.</span>
+      <button className="rounded-xl bg-white/15 px-4 py-2 font-bold active:bg-white/25" onClick={applyUpdate}>
+        Update
+      </button>
+    </div>
   );
 }
 
-/** Dismissible install card (used on the home screen). Hidden once installed or dismissed. */
+/** Dismissible install card (home screen). Hidden once installed or dismissed. */
 export function InstallCard() {
   const { installable, install, isIOS, canInstall } = usePwa();
   const [dismissed, setDismissed] = useState(() => {
@@ -206,35 +182,23 @@ export function InstallCard() {
       /* ignore */
     }
   };
-  const show = installable && !dismissed && (canInstall || isIOS);
+  if (!(installable && !dismissed && (canInstall || isIOS))) return null;
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 0, height: 0, y: -10 }}
-          animate={{ opacity: 1, height: 'auto', y: 0 }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.35 }}
-          className="overflow-hidden"
-        >
-          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-folder-deep/60 bg-folder/50 p-3.5">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ink text-folder">
-              <Icon name="download" size={20} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold">Install DetectiveLanka</p>
-              <p className="text-xs text-ink-soft">Full-screen app, works offline, one tap from your home screen.</p>
-            </div>
-            <button className="btn-navy !min-h-9 !px-3.5" onClick={install}>
-              Install
-            </button>
-            <button className="btn-ghost !min-h-9 !px-2" aria-label="Dismiss" onClick={hide}>
-              <Icon name="x" size={16} />
-            </button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className="mb-4 flex items-center gap-3 rounded-2xl border border-folder-deep/70 bg-folder/50 p-3.5">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-ink text-folder">
+        <Icon name="download" size={20} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold">Install DetectiveLanka</p>
+        <p className="text-xs text-ink-soft">Full-screen app, works offline.</p>
+      </div>
+      <button className="btn-primary !min-h-10 !px-4" onClick={install}>
+        Install
+      </button>
+      <button className="btn-ghost !min-h-10 !px-2.5" aria-label="Dismiss" onClick={hide}>
+        <Icon name="x" size={16} />
+      </button>
+    </div>
   );
 }
 
@@ -246,13 +210,13 @@ function IOSInstallSheet() {
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-white">1</span>
           <span>
-            Open this page in <strong>Safari</strong>, then tap the <strong>Share</strong> button <Icon name="share" size={16} className="inline -mt-1" /> in the toolbar.
+            Open this page in <strong>Safari</strong>, then tap the <strong>Share</strong> button <Icon name="share" size={16} className="-mt-1 inline" /> in the toolbar.
           </span>
         </li>
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-white">2</span>
           <span>
-            Scroll down and choose <strong>Add to Home Screen</strong> <Icon name="plus" size={16} className="inline -mt-1" />.
+            Scroll down and choose <strong>Add to Home Screen</strong> <Icon name="plus" size={16} className="-mt-1 inline" />.
           </span>
         </li>
         <li className="flex gap-3">
@@ -262,7 +226,7 @@ function IOSInstallSheet() {
           </span>
         </li>
       </ol>
-      <button className="btn-navy mt-6 w-full" onClick={() => setShowIOSHelp(false)}>
+      <button className="btn-primary mt-6 w-full" onClick={() => setShowIOSHelp(false)}>
         Got it
       </button>
     </Dialog>

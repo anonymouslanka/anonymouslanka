@@ -3,7 +3,7 @@ import { Icon } from './Icon';
 import { Dialog, useToast } from './ui';
 
 /** Shares only the public case URL (`/case/<publicId>`) — never keys or tokens. */
-export function ShareButton({ postId, title }: { postId: string; title: string }) {
+export function ShareButton({ postId, title, iconOnly = false }: { postId: string; title: string; iconOnly?: boolean }) {
   const [open, setOpen] = useState(false);
   const toast = useToast();
   const url = `${location.origin}/case/${postId}`;
@@ -29,12 +29,12 @@ export function ShareButton({ postId, title }: { postId: string; title: string }
       toast('error', 'Could not copy the link.');
     }
   };
-  const item = 'flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors hover:bg-stone-100';
+  const item = 'flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-left text-sm font-bold active:bg-black/5';
 
   return (
     <>
-      <button className="btn-secondary" onClick={share}>
-        <Icon name="share" size={17} /> Share
+      <button className={iconOnly ? 'btn-secondary !px-3.5' : 'btn-secondary'} onClick={share} aria-label="Share this case">
+        <Icon name="share" size={20} /> {!iconOnly && 'Share'}
       </button>
       <Dialog open={open} onClose={() => setOpen(false)} title="Share this case file">
         <div className="-mx-1 space-y-1">

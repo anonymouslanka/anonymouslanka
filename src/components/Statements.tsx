@@ -1,7 +1,6 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '../lib/api';
-import { spring, Stagger, StaggerItem } from '../lib/motion';
+import { Stagger, StaggerItem } from '../lib/motion';
 import { storage } from '../lib/storage';
 import type { ImageDto, OwnerComment, PublicComment } from '../lib/types';
 import { timeAgo } from '../lib/util';
@@ -9,27 +8,27 @@ import { EditKeyDialog } from './EditKeyDialog';
 import { Icon } from './Icon';
 import { ImagePicker, MAX_COMMENT_IMAGES } from './ImagePicker';
 import { Lightbox } from './Lightbox';
-import { ConfirmDialog, ErrorState, FieldError, haptic, Skeleton, Spinner, StatusBadge, useToast } from './ui';
+import { ConfirmDialog, Dialog, ErrorState, FieldError, haptic, Skeleton, Spinner, StatusBadge, useToast } from './ui';
 
 function Exhibits({ images, onOpen }: { images: ImageDto[]; onOpen: (i: number) => void }) {
   if (!images.length) return null;
   return (
     <div className="mt-3 flex flex-wrap gap-2">
       {images.map((img, i) => (
-        <motion.button key={img.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.94 }} transition={spring} onClick={() => onOpen(i)} className="relative h-20 w-20 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-sm" aria-label={`Open exhibit ${String.fromCharCode(65 + i)}`}>
+        <button key={img.id} onClick={() => onOpen(i)} className="relative h-20 w-20 overflow-hidden rounded-xl border border-black/10 bg-white p-1 transition-transform duration-100 active:scale-95" aria-label={`Open exhibit ${String.fromCharCode(65 + i)}`}>
           <img src={img.thumb} alt="" crossOrigin="anonymous" loading="lazy" className="h-full w-full rounded-lg object-cover" />
-          <span className="absolute bottom-1.5 left-1.5 rounded bg-ink/80 px-1 font-mono text-[0.55rem] font-bold text-white">{String.fromCharCode(65 + i)}</span>
-        </motion.button>
+          <span className="absolute bottom-1.5 left-1.5 rounded bg-ink/85 px-1 font-mono text-[0.55rem] text-white">{String.fromCharCode(65 + i)}</span>
+        </button>
       ))}
     </div>
   );
 }
 
 /**
- * Statements on a case: public (approved) ones, plus the visitor's own — recovered from this device's
- * localStorage. Each statement has its own independent key and may carry up to two photo exhibits.
+ * Statements on a case. They are published immediately. Anyone can report one; after 10 reports it is hidden and an
+ * admin decides. Each statement has its own independent key and may carry up to two photo exhibits.
  */
-export function Statements({ postId }: { postId: string }) {
+export function Statements({ postId, composerOpen, setComposerOpen }: { postId: string; composerOpen: boolean; setComposerOpen: (v: boolean) => void }) {
   const toast = useToast();
   const [items, setItems] = useState<PublicComment[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -42,12 +41,15 @@ export function Statements({ postId }: { postId: string }) {
   const [files, setFiles] = useState<File[]>([]);
   const [resetKey, setResetKey] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [fieldErr, setFieldErr] = useState<string[]>();
   const [newKey, setNewKey] = useState<{ key: string; saved: boolean } | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editRemoved, setEditRemoved] = useState<string[]>([]);
   const [toDelete, setToDelete] = useState<OwnerComment | null>(null);
+  const [toReport, setToReport] = useState<PublicComment | null>(null);
+  const [reported, setReported] = useState<Set<string>>(new Set());
   const [viewer, setViewer] = useState<{ images: ImageDto[]; index: number } | null>(null);
 
   const load = useCallback(
@@ -91,25 +93,29 @@ export function Statements({ postId }: { postId: string }) {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (navigator.onLine === false) return toast('error', 'You are offline. Try again when you are back online.');
     setBusy(true);
+    setProgress(null);
     setFieldErr(undefined);
     try {
       const fd = new FormData();
       fd.append('content', text);
       files.forEach((f) => fd.append('images', f));
-      const { comment, editKey } = await api.createComment(postId, fd);
+      const { comment, editKey } = await api.createComment(postId, fd, setProgress);
       const saved = storage.saveCommentKey(postId, comment.id, editKey);
       setText('');
       setFiles([]);
       setResetKey((k) => k + 1);
+      setComposerOpen(false);
       setNewKey({ key: editKey, saved });
-      await loadMine();
+      await Promise.all([loadMine(), load()]);
     } catch (err) {
       const ae = err as ApiError;
       if (ae.fields.content) setFieldErr(ae.fields.content);
       else toast('error', ae.message);
     } finally {
       setBusy(false);
+      setProgress(null);
     }
   };
 
@@ -122,7 +128,7 @@ export function Statements({ postId }: { postId: string }) {
       if (editText !== c.content) fd.append('content', editText);
       editRemoved.forEach((id) => fd.append('removeImageIds', id));
       await api.updateComment(c.id, key, fd);
-      toast('success', 'Statement updated. It will be reviewed again before it appears.');
+      toast('success', 'Statement updated.');
       setEditing(null);
       await Promise.all([loadMine(), load()]);
     } catch (err) {
@@ -149,99 +155,139 @@ export function Statements({ postId }: { postId: string }) {
     }
   };
 
+  const confirmReport = async () => {
+    if (!toReport) return;
+    const id = toReport.id;
+    setBusy(true);
+    try {
+      const r = await api.reportComment(id);
+      storage.markReported(id);
+      setReported((s) => new Set(s).add(id));
+      toast('success', r.hidden ? 'Thanks — this statement was hidden and sent to a moderator.' : 'Thanks — your report was recorded.');
+      setToReport(null);
+      if (r.hidden) await load();
+    } catch (err) {
+      toast('error', (err as ApiError).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const hiddenMine = mine.filter((c) => c.status !== 'APPROVED');
+
   return (
     <section aria-labelledby="statements-h" className="mt-10">
-      <div className="mb-4 flex items-end justify-between">
+      <div className="mb-4 flex items-end justify-between gap-3">
         <h2 id="statements-h" className="font-display text-2xl font-bold">Statements</h2>
-        <span className="font-mono text-xs font-bold tracking-[0.14em] text-[#9b7621] uppercase">{items.length}{hasMore ? '+' : ''} on file</span>
+        <span className="font-mono text-xs tracking-[0.12em] text-[#9b7621] uppercase">{items.length}{hasMore ? '+' : ''} on file</span>
       </div>
 
-      <form onSubmit={submit} className="card p-4 sm:p-5">
-        <label htmlFor="statement" className="label">Add a statement</label>
-        <textarea id="statement" className="input min-h-24" maxLength={2000} required minLength={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="What do you know about this case? Attach a photo as an exhibit if you have one. No personal details." />
-        <FieldError messages={fieldErr} />
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <ImagePicker compact slots={MAX_COMMENT_IMAGES} onChange={setFiles} onError={(m) => toast('error', m)} resetKey={resetKey} />
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-ink-soft">{text.length}/2000</span>
-            <motion.button whileTap={{ scale: 0.95 }} transition={spring} className="btn-navy" disabled={busy || text.trim().length < 2}>
-              {busy ? <Spinner /> : <Icon name="file" size={17} />} File statement
-            </motion.button>
-          </div>
+      <button className="btn-secondary mb-5 w-full !justify-start !rounded-2xl !py-3.5" onClick={() => setComposerOpen(true)}>
+        <Icon name="chat" size={20} /> <span className="text-ink-soft">Add your statement…</span>
+      </button>
+
+      {hiddenMine.length > 0 && (
+        <div className="mb-6 space-y-3">
+          {hiddenMine.map((c) => (
+            <div key={c.id} className="card border-dashed p-4">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <StatusBadge status={c.status} />
+                <span className="text-xs text-ink-soft">Your statement was reported and is hidden for review</span>
+              </div>
+              <p className="prose-plain text-sm">{c.content}</p>
+              {c.rejectionReason && <p className="mt-2 text-xs text-red-600">Reason: {c.rejectionReason}</p>}
+            </div>
+          ))}
         </div>
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-ink-soft"><Icon name="lock" size={13} /> Anonymous. Reviewed by a moderator before it appears.</p>
-      </form>
+      )}
 
-      <AnimatePresence initial={false}>
-        {mine.length > 0 && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-6 space-y-3 overflow-hidden">
-            <h3 className="font-mono text-xs font-bold tracking-[0.14em] text-ink-soft uppercase">Your statements on this device</h3>
-            {mine.map((c) => (
-              <motion.div layout key={c.id} className="card border-dashed p-4">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <StatusBadge status={c.status} />
-                  <span className="text-xs text-ink-soft">{timeAgo(c.createdAt)}</span>
-                </div>
-                {editing === c.id ? (
-                  <div className="space-y-3">
-                    <textarea className="input min-h-20" value={editText} maxLength={2000} onChange={(e) => setEditText(e.target.value)} aria-label="Edit statement" />
-                    {c.images.filter((i) => !editRemoved.includes(i.id)).length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {c.images.filter((i) => !editRemoved.includes(i.id)).map((img) => (
-                          <div key={img.id} className="relative h-16 w-16 overflow-hidden rounded-xl border border-stone-200">
-                            <img src={img.thumb} alt="" crossOrigin="anonymous" className="h-full w-full object-cover" />
-                            <button type="button" onClick={() => setEditRemoved((r) => [...r, img.id])} aria-label="Remove exhibit" className="absolute top-0.5 right-0.5 grid h-5 w-5 place-items-center rounded-full bg-ink/80 text-white"><Icon name="x" size={11} strokeWidth={2.6} /></button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex justify-end gap-2">
-                      <button className="btn-ghost" onClick={() => setEditing(null)}>Cancel</button>
-                      <button className="btn-navy" disabled={busy || editText.trim().length < 2} onClick={() => saveEdit(c)}>Save</button>
+      {mine.filter((c) => c.status === 'APPROVED').length > 0 && (
+        <div className="mb-6 space-y-3">
+          <h3 className="font-mono text-xs tracking-[0.12em] text-ink-soft uppercase">Your statements on this device</h3>
+          {mine.filter((c) => c.status === 'APPROVED').map((c) => (
+            <div key={c.id} className="card border-l-[5px] border-l-brand-300 p-4">
+              {editing === c.id ? (
+                <div className="space-y-3">
+                  <textarea className="input min-h-24" value={editText} maxLength={2000} onChange={(e) => setEditText(e.target.value)} aria-label="Edit statement" />
+                  {c.images.filter((i) => !editRemoved.includes(i.id)).length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {c.images.filter((i) => !editRemoved.includes(i.id)).map((img) => (
+                        <div key={img.id} className="relative h-16 w-16 overflow-hidden rounded-xl border border-black/10">
+                          <img src={img.thumb} alt="" crossOrigin="anonymous" className="h-full w-full object-cover" />
+                          <button type="button" onClick={() => setEditRemoved((r) => [...r, img.id])} aria-label="Remove exhibit" className="absolute top-0.5 right-0.5 grid h-6 w-6 place-items-center rounded-full bg-ink/85 text-white"><Icon name="x" size={12} strokeWidth={2.8} /></button>
+                        </div>
+                      ))}
                     </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button className="btn-secondary" onClick={() => setEditing(null)}>Cancel</button>
+                    <button className="btn-primary" disabled={busy || editText.trim().length < 2} onClick={() => saveEdit(c)}>Save</button>
                   </div>
-                ) : (
-                  <>
-                    <p className="prose-plain text-sm">{c.content}</p>
-                    <Exhibits images={c.images} onOpen={(i) => setViewer({ images: c.images, index: i })} />
-                    {c.status === 'REJECTED' && c.rejectionReason && <p className="mt-2 text-xs text-red-600">Reason: {c.rejectionReason}</p>}
-                    <div className="mt-3 flex gap-1">
-                      <button className="btn-ghost !min-h-9 !px-3 !text-xs" onClick={() => { setEditing(c.id); setEditText(c.content); setEditRemoved([]); }}><Icon name="edit" size={15} /> Edit</button>
-                      <button className="btn-ghost !min-h-9 !px-3 !text-xs !text-red-600" onClick={() => { haptic(8); setToDelete(c); }}><Icon name="trash" size={15} /> Withdraw</button>
-                    </div>
-                  </>
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                </div>
+              ) : (
+                <>
+                  <p className="prose-plain text-sm">{c.content}</p>
+                  <Exhibits images={c.images} onOpen={(i) => setViewer({ images: c.images, index: i })} />
+                  <div className="mt-3 flex gap-2">
+                    <button className="btn-secondary !min-h-10 !px-3.5 !text-[0.82rem]" onClick={() => { setEditing(c.id); setEditText(c.content); setEditRemoved([]); }}><Icon name="edit" size={16} /> Edit</button>
+                    <button className="btn-ghost !min-h-10 !px-3.5 !text-[0.82rem] !text-red-600" onClick={() => { haptic(8); setToDelete(c); }}><Icon name="trash" size={16} /> Withdraw</button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-      <div className="mt-8">
-        {items.length > 0 && (
-          <Stagger inView className="relative space-y-4 border-l-2 border-folder-deep/70 pl-5">
-            {items.map((c, i) => (
+      {items.length > 0 && (
+        <Stagger className="relative space-y-5 border-l-2 border-folder-deep/80 pl-5">
+          {items.map((c, i) => {
+            const isMine = Boolean(storage.getCommentKey(c.id));
+            const done = reported.has(c.id) || storage.hasReported(c.id);
+            return (
               <StaggerItem key={c.id}>
                 <article className="relative">
                   <span className="absolute top-1.5 -left-[1.72rem] h-3 w-3 rounded-full border-2 border-folder-deep bg-paper" aria-hidden="true" />
-                  <p className="font-mono text-[0.68rem] font-bold tracking-[0.14em] text-[#9b7621] uppercase">Statement {i + 1} · {timeAgo(c.createdAt)}</p>
+                  <p className="font-mono text-[0.7rem] tracking-[0.12em] text-[#9b7621] uppercase">Statement {i + 1} · {timeAgo(c.createdAt)}</p>
                   <p className="prose-plain mt-1 text-[0.95rem]">{c.content}</p>
                   <Exhibits images={c.images} onOpen={(idx) => setViewer({ images: c.images, index: idx })} />
+                  {!isMine && (
+                    <button className="btn-ghost mt-2 !min-h-9 !rounded-lg !px-2.5 !text-xs" disabled={done} onClick={() => setToReport(c)}>
+                      <Icon name="flag" size={15} /> {done ? 'Reported' : 'Report'}
+                    </button>
+                  )}
                 </article>
               </StaggerItem>
-            ))}
-          </Stagger>
-        )}
-        {loading && <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</div>}
-        {error && <ErrorState message={error.message} onRetry={() => load(cursor)} />}
-        {!loading && !error && items.length === 0 && <p className="text-sm text-ink-soft">No statements on file yet. Add the first one.</p>}
-        {hasMore && !loading && <button className="btn-secondary mt-5" onClick={() => load(cursor)}>Load more statements</button>}
-      </div>
+            );
+          })}
+        </Stagger>
+      )}
+      {loading && <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</div>}
+      {error && <ErrorState message={error.message} onRetry={() => load(cursor)} />}
+      {!loading && !error && items.length === 0 && <p className="text-sm text-ink-soft">No statements on file yet. Add the first one.</p>}
+      {hasMore && !loading && <button className="btn-secondary mt-5" onClick={() => load(cursor)}>Load more statements</button>}
 
-      <EditKeyDialog open={newKey !== null} editKey={newKey?.key ?? ''} kind="statement" savedLocally={newKey?.saved ?? false} onDone={() => { setNewKey(null); toast('info', 'Your statement is under review.'); }} />
+      <Dialog open={composerOpen} onClose={() => !busy && setComposerOpen(false)} title="Add a statement">
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label htmlFor="statement" className="label">Your statement</label>
+            <textarea id="statement" className="input min-h-32" maxLength={2000} required minLength={2} value={text} onChange={(e) => setText(e.target.value)} placeholder="What do you know about this case? No personal details." />
+            <FieldError messages={fieldErr} />
+            <p className="mt-1 text-right text-xs text-ink-soft">{text.length}/2000</p>
+          </div>
+          <ImagePicker compact slots={MAX_COMMENT_IMAGES} onChange={setFiles} onError={(m) => toast('error', m)} resetKey={resetKey} />
+          <p className="flex items-center gap-1.5 text-xs text-ink-soft"><Icon name="lock" size={13} /> Anonymous. Published immediately; anyone can report it.</p>
+          <button className="btn-primary w-full" disabled={busy || text.trim().length < 2}>
+            {busy ? <Spinner /> : <Icon name="file" size={19} />}
+            {busy ? (progress != null && progress < 100 && files.length ? `Uploading ${progress}%` : 'Filing…') : 'File statement'}
+          </button>
+        </form>
+      </Dialog>
+
+      <EditKeyDialog open={newKey !== null} editKey={newKey?.key ?? ''} kind="statement" savedLocally={newKey?.saved ?? false} onDone={() => { setNewKey(null); toast('success', 'Your statement is on file.'); }} />
       <ConfirmDialog open={toDelete !== null} title="Withdraw statement?" message="This permanently removes your statement and its photos." confirmLabel="Withdraw" danger busy={busy} onConfirm={confirmDelete} onClose={() => setToDelete(null)} />
+      <ConfirmDialog open={toReport !== null} title="Report this statement?" message="Use this for abuse, private personal details, threats or false claims. After 10 reports a statement is hidden and a moderator reviews it." confirmLabel="Report" danger busy={busy} onConfirm={confirmReport} onClose={() => setToReport(null)} />
       <Lightbox images={viewer?.images ?? []} index={viewer ? viewer.index : null} onIndex={(i) => setViewer((v) => (v ? { ...v, index: i } : v))} onClose={() => setViewer(null)} />
     </section>
   );
 }
-

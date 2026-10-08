@@ -1,9 +1,10 @@
-import { MotionConfig } from 'framer-motion';
 import { lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { PwaProvider } from './components/Pwa';
 import { ToastProvider } from './components/ui';
+import { MotionProvider } from './lib/motion';
 
 const Home = lazy(() => import('./pages/Home'));
 const CaseFile = lazy(() => import('./pages/CaseFile'));
@@ -22,29 +23,31 @@ function LegacyPost() {
 
 export default function App() {
   return (
-    <MotionConfig reducedMotion="user">
-      <ToastProvider>
-        <PwaProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="case/:id" element={<CaseFile />} />
-                <Route path="open-case" element={<OpenCase />} />
-                {/* Only the public case id is in the URL — the case key is read from this device's storage. */}
-                <Route path="edit/:id" element={<EditCase />} />
-                <Route path="my-cases" element={<MyCases />} />
-                <Route path="about" element={<About />} />
-                <Route path="guidelines" element={<Guidelines />} />
-                <Route path="post/:id" element={<LegacyPost />} />
-                <Route path="new" element={<Navigate to="/open-case" replace />} />
-                <Route path="my-posts" element={<Navigate to="/my-cases" replace />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </PwaProvider>
-      </ToastProvider>
-    </MotionConfig>
+    <ErrorBoundary>
+      <MotionProvider>
+        <ToastProvider>
+          <PwaProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="case/:id" element={<CaseFile />} />
+                  <Route path="open-case" element={<OpenCase />} />
+                  {/* Only the public case id is in the URL — the case key is read from this device's storage. */}
+                  <Route path="edit/:id" element={<EditCase />} />
+                  <Route path="my-cases" element={<MyCases />} />
+                  <Route path="about" element={<About />} />
+                  <Route path="guidelines" element={<Guidelines />} />
+                  <Route path="post/:id" element={<LegacyPost />} />
+                  <Route path="new" element={<Navigate to="/open-case" replace />} />
+                  <Route path="my-posts" element={<Navigate to="/my-cases" replace />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </PwaProvider>
+        </ToastProvider>
+      </MotionProvider>
+    </ErrorBoundary>
   );
 }

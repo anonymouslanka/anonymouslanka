@@ -1,4 +1,4 @@
-import { SVGProps, useId } from 'react';
+import type { SVGProps } from 'react';
 
 /** Line icons (24px grid). Deliberately no people/avatar glyphs and no emoji anywhere in the app. */
 const paths = {
@@ -38,20 +38,25 @@ const paths = {
   gavel: <><path d="m14 5 5 5M10.5 8.5l5 5M8 11l5 5" /><path d="M5 19h8M7.5 14.5 3.5 18.5" /></>,
   tag: <><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9-9-9z" /><circle cx="8" cy="8" r="1.4" /></>,
   grid: <><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></>,
+  flag: <><path d="M5 21V4" /><path d="M5 5c4-2 7 2 11 0 1-.5 3-1 3-1v9s-2 .5-3 1c-4 2-7-2-11 0" /></>,
   inbox: <><path d="M3 13l3-8h12l3 8" /><path d="M3 13v6a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-6h-5a3 3 0 0 1-6 0H3z" /></>,
 } as const;
 
 export type IconName = keyof typeof paths;
 
-export function Icon({ name, size = 20, ...rest }: { name: IconName; size?: number } & Omit<SVGProps<SVGSVGElement>, 'name'>) {
+const TINTED = new Set<IconName>(['folder', 'folderPlus', 'folders', 'file', 'chat', 'image', 'shield', 'shieldCheck', 'clock', 'key', 'lock', 'tag', 'inbox', 'grid', 'copy', 'info', 'alert']);
+
+export function Icon({ name, size = 20, strokeWidth = 2.3, ...rest }: { name: IconName; size?: number } & Omit<SVGProps<SVGSVGElement>, 'name'>) {
+  const tint = TINTED.has(name);
   return (
     <svg
       viewBox="0 0 24 24"
       width={size}
       height={size}
-      fill="none"
+      fill={tint ? 'currentColor' : 'none'}
+      fillOpacity={tint ? 0.16 : undefined}
       stroke="currentColor"
-      strokeWidth={1.8}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -63,26 +68,7 @@ export function Icon({ name, size = 20, ...rest }: { name: IconName; size?: numb
   );
 }
 
-/** App mark: a manila case folder under a magnifying glass. */
+/** App mark: Sherlock Holmes deerstalker hat. */
 export function LogoMark({ size = 36, className }: { size?: number; className?: string }) {
-  // Unique gradient id per instance: duplicate ids break fills when an earlier copy is display:none.
-  const gid = useId().replace(/:/g, '') + 'g';
-  return (
-    <svg viewBox="0 0 512 512" width={size} height={size} className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#34457f" />
-          <stop offset="1" stopColor="#1c2541" />
-        </linearGradient>
-      </defs>
-      <rect width="512" height="512" rx="112" fill={`url(#${gid})`} />
-      <path d="M88 168a24 24 0 0 1 24-24h82l30 34h156a24 24 0 0 1 24 24v168a24 24 0 0 1-24 24H112a24 24 0 0 1-24-24z" fill="#f6e3b4" />
-      <path d="M88 214h316v10H88z" fill="#e3c987" />
-      <circle cx="292" cy="294" r="74" fill="#1c2541" fillOpacity="0.12" stroke="#fff" strokeWidth="26" />
-      <circle cx="292" cy="294" r="74" fill="none" stroke="#1c2541" strokeWidth="8" />
-      <path d="M346 348l62 62" stroke="#fff" strokeWidth="32" strokeLinecap="round" />
-      <path d="M346 348l62 62" stroke="#1c2541" strokeWidth="10" strokeLinecap="round" />
-      <circle cx="292" cy="294" r="17" fill="#f2b53a" />
-    </svg>
-  );
+  return <img src="/icons/icon-192.png" width={size} height={size} alt="" aria-hidden="true" decoding="async" className={className} style={{ borderRadius: size * 0.22 }} />;
 }

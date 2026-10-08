@@ -1,6 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { spring } from '../lib/motion';
 import { Icon } from './Icon';
 
 const OK = ['image/jpeg', 'image/png', 'image/webp'];
@@ -87,20 +85,18 @@ export function ImagePicker({
     return (
       <div>
         <div className="flex flex-wrap items-center gap-2">
-          <AnimatePresence initial={false}>
-            {items.map((it, i) => (
-              <motion.div key={it.id} layout initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} transition={spring} className="relative h-14 w-14 overflow-hidden rounded-xl border border-stone-200">
-                <img src={it.url} alt={`Selected exhibit ${i + 1}`} className="h-full w-full object-cover" />
-                <button type="button" onClick={() => remove(it.id)} aria-label={`Remove exhibit ${i + 1}`} className="absolute top-0.5 right-0.5 grid h-5 w-5 place-items-center rounded-full bg-ink/80 text-white">
-                  <Icon name="x" size={11} strokeWidth={2.6} />
-                </button>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {items.map((it, i) => (
+            <div key={it.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-black/10">
+              <img src={it.url} alt={`Selected exhibit ${i + 1}`} className="h-full w-full object-cover" />
+              <button type="button" onClick={() => remove(it.id)} aria-label={`Remove exhibit ${i + 1}`} className="absolute top-0.5 right-0.5 grid h-6 w-6 place-items-center rounded-full bg-ink/85 text-white">
+                <Icon name="x" size={12} strokeWidth={2.8} />
+              </button>
+            </div>
+          ))}
           {items.length < slots && (
-            <motion.button whileTap={{ scale: 0.93 }} transition={spring} type="button" onClick={() => input.current?.click()} className="btn-ghost !min-h-10 !rounded-xl border border-dashed border-stone-300 !px-3">
-              <Icon name="paperclip" size={17} /> Attach photo
-            </motion.button>
+            <button type="button" onClick={() => input.current?.click()} className="btn-secondary !min-h-11 !rounded-xl !px-3.5">
+              <Icon name="paperclip" size={18} /> Attach photo
+            </button>
           )}
         </div>
         {hiddenInput}
@@ -111,24 +107,22 @@ export function ImagePicker({
   return (
     <div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <AnimatePresence initial={false}>
-          {items.map((it, i) => (
-            <motion.div key={it.id} layout initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.7, opacity: 0 }} transition={spring} className="group relative aspect-square overflow-hidden rounded-2xl border border-stone-200 bg-white p-1.5 shadow-sm">
-              <img src={it.url} alt={`Selected exhibit ${i + 1}`} className="h-full w-full rounded-xl object-cover" />
-              <span className="absolute bottom-2.5 left-2.5 rounded-md bg-ink/80 px-1.5 py-0.5 font-mono text-[0.6rem] font-bold tracking-widest text-white uppercase">Exhibit {String.fromCharCode(65 + i)}</span>
-              <button type="button" onClick={() => remove(it.id)} aria-label={`Remove exhibit ${i + 1}`} className="absolute top-2.5 right-2.5 grid h-8 w-8 place-items-center rounded-full bg-ink/80 text-white transition hover:bg-red-600">
-                <Icon name="x" size={15} strokeWidth={2.4} />
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {items.map((it, i) => (
+          <div key={it.id} className="relative aspect-square overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5">
+            <img src={it.url} alt={`Selected exhibit ${i + 1}`} className="h-full w-full rounded-xl object-cover" />
+            <span className="absolute bottom-2.5 left-2.5 rounded-md bg-ink/85 px-1.5 py-0.5 font-mono text-[0.6rem] tracking-widest text-white uppercase">Exhibit {String.fromCharCode(65 + i)}</span>
+            <button type="button" onClick={() => remove(it.id)} aria-label={`Remove exhibit ${i + 1}`} className="absolute top-2.5 right-2.5 grid h-9 w-9 place-items-center rounded-full bg-ink/85 text-white active:bg-red-600">
+              <Icon name="x" size={16} strokeWidth={2.6} />
+            </button>
+          </div>
+        ))}
         {items.length < slots && (
-          <motion.button layout whileTap={{ scale: 0.95 }} whileHover={{ y: -2 }} transition={spring} type="button" onClick={() => input.current?.click()} className="grid aspect-square place-items-center rounded-2xl border-2 border-dashed border-stone-300 bg-white/60 text-center text-sm font-semibold text-ink-soft transition-colors hover:border-brand-400 hover:text-brand-700">
+          <button type="button" onClick={() => input.current?.click()} className="grid aspect-square place-items-center rounded-2xl border-2 border-dashed border-black/20 bg-white/60 text-center text-sm font-bold text-ink-soft transition-transform duration-100 active:scale-[0.97]">
             <span className="flex flex-col items-center gap-1.5">
-              <Icon name="image" size={26} />
+              <Icon name="image" size={28} />
               Add exhibit
             </span>
-          </motion.button>
+          </button>
         )}
       </div>
       {hiddenInput}

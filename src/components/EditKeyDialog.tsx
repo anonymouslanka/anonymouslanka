@@ -1,6 +1,4 @@
-import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { spring } from '../lib/motion';
 import { Icon } from './Icon';
 import { Dialog, haptic, useToast } from './ui';
 
@@ -55,26 +53,26 @@ export function EditKeyDialog({
         </div>
         <div>
           <label className="label" htmlFor="edit-key">Key</label>
-          <input id="edit-key" readOnly value={editKey} onFocus={(e) => e.currentTarget.select()} className="input !bg-folder/30 font-mono !text-xs" />
+          <input id="edit-key" readOnly value={editKey} onFocus={(e) => e.currentTarget.select()} className="input font-code" />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <motion.button whileTap={{ scale: 0.95 }} transition={spring} className="btn-secondary" onClick={copy}>
-            <Icon name={copied ? 'check' : 'copy'} size={17} /> {copied ? 'Copied' : 'Copy key'}
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} transition={spring} className="btn-secondary" onClick={download}>
-            <Icon name="download" size={17} /> Save file
-          </motion.button>
+          <button className="btn-secondary" onClick={copy}>
+            <Icon name={copied ? 'check' : 'copy'} size={18} /> {copied ? 'Copied' : 'Copy key'}
+          </button>
+          <button className="btn-secondary" onClick={download}>
+            <Icon name="download" size={18} /> Save file
+          </button>
         </div>
         <p className="text-ink-soft">
           {savedLocally
             ? 'A copy was also saved on this device only, so you can manage it from here. Clearing site data removes it — keep your own backup.'
             : 'We could not save a copy on this device (storage is blocked). Keep the key somewhere safe.'}
         </p>
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-stone-100 p-3.5">
-          <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand-700)]" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-black/5 p-3.5">
+          <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand-600)]" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} />
           <span>I have saved my key and understand it cannot be recovered.</span>
         </label>
-        <button className="btn-primary w-full !min-h-12" disabled={!confirmed} onClick={onDone}>
+        <button className="btn-primary w-full" disabled={!confirmed} onClick={onDone}>
           Continue
         </button>
       </div>
