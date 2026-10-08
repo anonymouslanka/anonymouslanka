@@ -1,8 +1,10 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { useAsync } from '../lib/hooks';
-import type { ImageDto, OwnerPost } from '../lib/types';
+import { MAX_FILES } from '../lib/files';
+import type { FileDto, ImageDto, OwnerPost } from '../lib/types';
 import { Icon, IconName } from './Icon';
+import { FilePicker, FileRow } from './FilePicker';
 import { ImagePicker, MAX_IMAGES } from './ImagePicker';
 import { FieldError, Spinner, useToast } from './ui';
 
@@ -70,10 +72,14 @@ export function CaseForm({
   const [tags, setTags] = useState(initial?.tags.join(', ') ?? draft.current?.tags ?? '');
   const [files, setFiles] = useState<File[]>([]);
   const [removed, setRemoved] = useState<string[]>([]);
+  const [docs, setDocs] = useState<File[]>([]);
+  const [removedDocs, setRemovedDocs] = useState<string[]>([]);
   const [agree, setAgree] = useState(Boolean(initial));
   const edit = Boolean(initial);
   const existing: ImageDto[] = (initial?.images ?? []).filter((i) => !removed.includes(i.id));
   const slots = MAX_IMAGES - existing.length;
+  const existingDocs: FileDto[] = (initial?.files ?? []).filter((d) => !removedDocs.includes(d.id));
+  const docSlots = MAX_FILES - existingDocs.length;
 
   // Autosave the draft (create mode only).
   useEffect(() => {
@@ -107,8 +113,10 @@ export function CaseForm({
       if (category !== (initial.category?.slug ?? '')) fd.append('category', category);
       if (tagList.join(',') !== initial.tags.join(',')) fd.append('tags', tagList.join(','));
       removed.forEach((id) => fd.append('removeImageIds', id));
+      removedDocs.forEach((id) => fd.append('removeFileIds', id));
     }
     files.forEach((f) => fd.append('images', f));
+    docs.forEach((f) => fd.append('files', f));
     onSubmit(fd);
   };
 
@@ -180,6 +188,16 @@ export function CaseForm({
         <FieldError messages={f.images} />
       </Section>
 
+      <Section n={4} icon="file" title="Documents" hint="PDF or Office files that back up the case (optional).">
+        {existingDocs.length > 0 && (
+          <div className="space-y-2.5">
+            {existingDocs.map((d) => <FileRow key={d.id} file={d} onRemove={() => setRemovedDocs((r) => [...r, d.id])} />)}
+          </div>
+        )}
+        {docSlots > 0 ? <FilePicker slots={docSlots} onChange={setDocs} onError={(m) => toast('error', m)} /> : <p className="text-sm text-ink-soft">Maximum documents reached.</p>}
+        <FieldError messages={f.files} />
+      </Section>
+
       {!edit && (
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-black/10 bg-white p-4 text-sm">
           <input type="checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand-600)]" />
@@ -190,7 +208,7 @@ export function CaseForm({
       <div className="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-10">
         <button className="btn-primary w-full !min-h-14 !rounded-2xl text-base" disabled={busy || !agree}>
           {busy ? <Spinner /> : <Icon name={edit ? 'check' : 'folderPlus'} size={22} />}
-          {busy ? (progress != null && progress < 100 && files.length ? `Uploading ${progress}%` : 'Filing…') : submitLabel}
+          {busy ? (progress != null && progress < 100 && (files.length || docs.length) ? `Uploading ${progress}%` : 'Filing…') : submitLabel}
         </button>
       </div>
     </form>

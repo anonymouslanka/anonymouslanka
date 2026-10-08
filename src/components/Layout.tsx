@@ -5,7 +5,6 @@ import { ConnectionBanner } from './ConnectionBanner';
 import { HelpSheet } from './HelpSheet';
 import { Icon, IconName, LogoMark } from './Icon';
 import { OfflineBar, UpdateToast, usePwa } from './Pwa';
-import { haptic } from './ui';
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -46,7 +45,7 @@ function SideItem({ to, label, icon, end }: { to: string; label: string; icon: I
 
 function TabItem({ to, label, icon, end }: { to: string; label: string; icon: IconName; end?: boolean }) {
   return (
-    <NavLink to={to} end={end} onClick={() => haptic(6)} className={({ isActive }) => cx('chrome flex flex-1 flex-col items-center gap-0.5 pt-2 pb-1.5 text-[0.66rem] font-bold', isActive ? 'text-brand-700' : 'text-stone-500')}>
+    <NavLink to={to} end={end} className={({ isActive }) => cx('chrome flex flex-1 flex-col items-center gap-0.5 pt-2 pb-1.5 text-[0.66rem] font-bold', isActive ? 'text-brand-700' : 'text-stone-500')}>
       {({ isActive }) => (
         <>
           <span className={cx('grid h-8 w-14 place-items-center rounded-full transition-colors', isActive && 'bg-brand-100')}>
@@ -138,7 +137,7 @@ export function Layout() {
             <TabItem to="/" label="Cases" icon="list" end />
             <TabItem to="/my-cases" label="My cases" icon="folders" />
             <div className="flex flex-1 justify-center">
-              <Link to="/open-case" onClick={() => haptic(12)} aria-label="Open a new case" className="btn-primary -mt-5 !h-14 !min-h-14 !w-14 !rounded-2xl !p-0 ring-4 ring-[#f8f4ea]">
+              <Link to="/open-case" aria-label="Open a new case" className="btn-primary -mt-5 !h-14 !min-h-14 !w-14 !rounded-2xl !p-0 ring-4 ring-[#f8f4ea]">
                 <Icon name="folderPlus" size={26} />
               </Link>
             </div>

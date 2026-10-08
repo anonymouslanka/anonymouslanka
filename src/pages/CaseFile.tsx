@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { FileRow } from '../components/FilePicker';
 import { Icon } from '../components/Icon';
-import { Lightbox } from '../components/Lightbox';
 import { ShareButton } from '../components/ShareButton';
 import { Statements } from '../components/Statements';
-import { EmptyState, ErrorState, Skeleton, StatusBadge } from '../components/ui';
-import { api } from '../lib/api';
+import { ConfirmDialog, EmptyState, ErrorState, Skeleton, StatusBadge, useToast } from '../components/ui';
+import { Viewer } from '../components/Viewer';
+import { api, ApiError } from '../lib/api';
+import { viewerItems } from '../lib/files';
+import { haptics } from '../lib/haptics';
 import { useAsync } from '../lib/hooks';
 import { storage } from '../lib/storage';
 import { caseNo, formatDate, usePageMeta } from '../lib/util';
@@ -21,9 +24,13 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
 
 export default function CaseFile() {
   const { id = '' } = useParams();
+  const toast = useToast();
   const { data: post, error, loading, reload } = useAsync(() => api.getPost(id), [id]);
   const [viewer, setViewer] = useState<number | null>(null);
   const [composer, setComposer] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [reported, setReported] = useState(() => storage.hasReported(`case-${id}`));
 
   usePageMeta({
     title: post ? `${post.title} (${caseNo(post.id)})` : 'Case file',
@@ -32,6 +39,8 @@ export default function CaseFile() {
     path: `/case/${id}`,
     noindex: !post,
   });
+
+  const items = useMemo(() => (post ? viewerItems(post.images, post.files) : []), [post]);
 
   // Structured data for search engines (a public case file is an anonymous forum-style post).
   useEffect(() => {
@@ -73,8 +82,25 @@ export default function CaseFile() {
 
   const mine = Boolean(storage.getPostKey(post.id));
 
+  const report = async () => {
+    setBusy(true);
+    try {
+      const r = await api.reportPost(post.id);
+      storage.markReported(`case-${post.id}`);
+      setReported(true);
+      setReporting(false);
+      toast('success', r.hidden ? 'Thanks — this case was hidden and sent to a moderator.' : 'Thanks — your report was recorded.');
+      if (r.hidden) reload();
+    } catch (e) {
+      haptics.error();
+      toast('error', (e as ApiError).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <article className="pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+    <article className="pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
       <Link to="/" className="chrome mb-4 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex">
         <Icon name="chevronLeft" size={18} /> Case files
       </Link>
@@ -87,15 +113,9 @@ export default function CaseFile() {
           <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-dashed border-folder-deep py-4 sm:grid-cols-4">
             <Fact label="Filed">{formatDate(post.publishedAt)}</Fact>
             <Fact label="Case type">{post.category?.name ?? 'Not specified'}</Fact>
-            <Fact label="Exhibits">{post.images.length}</Fact>
+            <Fact label="Exhibits">{post.images.length + post.files.length}</Fact>
             <Fact label="Statements">{post.commentCount}</Fact>
           </dl>
-          {/* Desktop actions (phones use the bottom action bar) */}
-          <div className="mt-4 hidden flex-wrap items-center gap-2.5 lg:flex">
-            <button className="btn-primary" onClick={() => setComposer(true)}><Icon name="chat" size={19} /> Add statement</button>
-            <ShareButton postId={post.id} title={post.title} />
-            {mine && <Link to={`/edit/${post.id}`} className="btn-secondary"><Icon name="edit" size={18} /> Manage my case</Link>}
-          </div>
         </div>
       </div>
 
@@ -118,6 +138,15 @@ export default function CaseFile() {
         </section>
       )}
 
+      {post.files.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-2 font-mono text-xs tracking-[0.14em] text-ink-soft uppercase">Documents</h2>
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {post.files.map((f, j) => <FileRow key={f.id} file={f} onOpen={() => setViewer(post.images.length + j)} />)}
+          </div>
+        </section>
+      )}
+
       {post.tags.length > 0 && (
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <Icon name="tag" size={16} className="text-ink-soft" />
@@ -127,21 +156,37 @@ export default function CaseFile() {
 
       <div className="mt-6 flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900">
         <Icon name="scale" size={20} className="mt-0.5 shrink-0" />
-        <p><strong>Notice.</strong> This is an anonymous, public-submitted case file that was reviewed by a moderator but not independently verified. If you believe it contains an error or private information, file a statement. In an emergency call <strong>119</strong>.</p>
+        <p><strong>Notice.</strong> This is an anonymous, public-submitted case file that was reviewed by a moderator but not independently verified. If you believe it contains an error or private information, file a statement or report the case. In an emergency call <strong>119</strong>.</p>
       </div>
 
       <Statements postId={post.id} composerOpen={composer} setComposerOpen={setComposer} />
 
-      {/* Phone action bar: always one tap away from adding a statement, sharing or managing your case */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-[#f8f4ea] px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
-        <div className="mx-auto flex max-w-lg gap-2">
-          <button className="btn-primary flex-1" onClick={() => setComposer(true)}><Icon name="chat" size={19} /> Add statement</button>
-          <ShareButton postId={post.id} title={post.title} iconOnly />
-          {mine && <Link to={`/edit/${post.id}`} className="btn-secondary !px-3.5" aria-label="Manage my case"><Icon name="edit" size={20} /></Link>}
+      {/* Fixed action bar on every screen size: add a statement, share, manage your case or report it */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-[#f8f4ea] px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:left-72">
+        <div className="mx-auto flex max-w-lg gap-2 lg:max-w-5xl lg:px-7">
+          <button className="btn-primary flex-1 lg:flex-none lg:px-8" onClick={() => setComposer(true)}><Icon name="chat" size={19} /> Add statement</button>
+          <ShareButton postId={post.id} title={post.title} excerpt={post.excerpt} />
+          {mine ? (
+            <Link to={`/edit/${post.id}`} className="btn-secondary !px-3.5" aria-label="Manage my case"><Icon name="edit" size={20} /> <span className="hidden sm:inline">Edit</span></Link>
+          ) : (
+            <button className="btn-secondary !px-3.5" disabled={reported} onClick={() => setReporting(true)} aria-label={reported ? 'Case reported' : 'Report this case'}>
+              <Icon name="flag" size={20} /> <span className="hidden sm:inline">{reported ? 'Reported' : 'Report'}</span>
+            </button>
+          )}
         </div>
       </div>
 
-      <Lightbox images={post.images} index={viewer} onIndex={setViewer} onClose={() => setViewer(null)} />
+      <ConfirmDialog
+        open={reporting}
+        title="Report this case?"
+        message="Use this for false claims, abuse, threats or private personal details. After 10 reports a case is hidden and a moderator reviews it again."
+        confirmLabel="Report case"
+        danger
+        busy={busy}
+        onConfirm={report}
+        onClose={() => setReporting(false)}
+      />
+      <Viewer items={items} index={viewer} onIndex={setViewer} onClose={() => setViewer(null)} />
     </article>
   );
 }

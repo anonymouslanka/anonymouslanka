@@ -4,8 +4,10 @@ import { Spinner } from '../components/ui';
 import { API_BASE } from '../lib/api';
 import { cx, usePageMeta } from '../lib/util';
 
-const INTERVAL = 30; // seconds between automatic checks
+const INTERVAL = 180; // seconds between automatic checks (3 minutes)
 const KEEP = 30; // checks kept in the history strip
+
+const clock = (s: number): string => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 interface StatusBody { status: string; service: string; timestamp: string; uptimeSeconds: number }
 interface HealthBody { status: string; checks: { database: string; redis: string; media: string } }
@@ -142,20 +144,29 @@ export default function Status() {
         </p>
       </section>
 
-      <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fffdf8] p-3.5">
-        <div className="flex items-center gap-3 text-sm font-bold">
-          {busy ? <Spinner className="text-brand-600" /> : <Icon name="clock" size={18} className="text-ink-soft" />}
-          <span>{busy ? 'Checking now…' : auto ? `Next check in ${left}s` : 'Auto-refresh is off'}</span>
+      <div className="card mt-3 divide-y divide-black/10">
+        <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+          <div className="flex items-center gap-3 text-sm font-bold">
+            {busy ? <Spinner className="text-brand-600" /> : <Icon name="clock" size={19} className="text-ink-soft" />}
+            <span aria-live="polite">{busy ? 'Checking now…' : auto ? `Next check in ${clock(left)}` : 'Auto-refresh is off'}</span>
+          </div>
+          <button className="btn-secondary !min-h-10 !px-3.5" onClick={() => void check()} disabled={busy}><Icon name="refresh" size={17} /> Check now</button>
         </div>
-        <div className="flex items-center gap-2">
-          <button role="switch" aria-checked={auto} onClick={toggle} className="flex min-h-10 items-center gap-2 rounded-xl px-2 text-xs font-bold text-ink-soft" aria-label="Auto refresh">
-            Auto
-            <span className={cx('relative h-6 w-10 rounded-full transition-colors duration-150', auto ? 'bg-brand-600' : 'bg-stone-300')}>
-              <span className={cx('absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-150', auto ? 'translate-x-[18px]' : 'translate-x-0.5')} />
-            </span>
-          </button>
-          <button className="btn-secondary !min-h-10 !px-3.5" onClick={() => void check()} disabled={busy}><Icon name="refresh" size={17} /> Check</button>
-        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={auto}
+          onClick={toggle}
+          className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left"
+        >
+          <span>
+            <span className="block text-sm font-bold">Auto-refresh</span>
+            <span className="block text-xs text-ink-soft">Check again every 3 minutes while this page is open</span>
+          </span>
+          <span className={cx('relative h-8 w-14 shrink-0 rounded-full border transition-colors duration-200 ease-out', auto ? 'border-brand-700 bg-brand-600' : 'border-black/15 bg-stone-300')} aria-hidden="true">
+            <span className={cx('absolute top-0.5 left-0.5 h-6.5 w-6.5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out', auto && 'translate-x-6')} />
+          </span>
+        </button>
       </div>
 
       <section className="card mt-4 overflow-hidden">

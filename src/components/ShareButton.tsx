@@ -3,7 +3,7 @@ import { Icon } from './Icon';
 import { Dialog, useToast } from './ui';
 
 /** Shares only the public case URL (`/case/<publicId>`) — never keys or tokens. */
-export function ShareButton({ postId, title, iconOnly = false }: { postId: string; title: string; iconOnly?: boolean }) {
+export function ShareButton({ postId, title, excerpt }: { postId: string; title: string; excerpt?: string }) {
   const [open, setOpen] = useState(false);
   const toast = useToast();
   const url = `${location.origin}/case/${postId}`;
@@ -12,7 +12,7 @@ export function ShareButton({ postId, title, iconOnly = false }: { postId: strin
   const share = async () => {
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title, url });
+        await navigator.share({ title, text: excerpt?.slice(0, 140), url });
         return;
       } catch (e) {
         if ((e as DOMException).name === 'AbortError') return;
@@ -33,8 +33,8 @@ export function ShareButton({ postId, title, iconOnly = false }: { postId: strin
 
   return (
     <>
-      <button className={iconOnly ? 'btn-secondary !px-3.5' : 'btn-secondary'} onClick={share} aria-label="Share this case">
-        <Icon name="share" size={20} /> {!iconOnly && 'Share'}
+      <button className="btn-secondary !px-3.5" onClick={share} aria-label="Share this case">
+        <Icon name="share" size={20} /> <span className="hidden sm:inline">Share</span>
       </button>
       <Dialog open={open} onClose={() => setOpen(false)} title="Share this case file">
         <div className="-mx-1 space-y-1">

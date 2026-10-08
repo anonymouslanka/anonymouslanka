@@ -189,6 +189,7 @@ export const api = {
     cached(`statements:${postId}:${cursor ?? ''}`, () => callPage<PublicComment>(http.get(`/posts/${postId}/comments`, { params: { cursor: cursor || undefined } }))),
   createComment: (postId: string, form: FormData, onProgress?: (pct: number) => void) =>
     call<{ comment: OwnerComment; editKey: string }>(http.post(`/posts/${postId}/comments`, form, { timeout: 120_000, onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)) })),
+  reportPost: (id: string) => call<{ reported: true; hidden: boolean; duplicate?: boolean }>(http.post(`/posts/${id}/report`)),
   reportComment: (id: string) => call<{ reported: true; hidden: boolean; duplicate?: boolean }>(http.post(`/comments/${id}/report`)),
   getOwnerComment: (id: string, key: string) => call<OwnerComment>(http.get(`/comments/${id}/owner`, keyHeader(key))),
   updateComment: (id: string, key: string, form: FormData) => call<OwnerComment>(http.patch(`/comments/${id}`, form, keyHeader(key))),

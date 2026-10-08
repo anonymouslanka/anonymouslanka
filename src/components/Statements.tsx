@@ -2,24 +2,30 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { Stagger, StaggerItem } from '../lib/motion';
 import { storage } from '../lib/storage';
-import type { ImageDto, OwnerComment, PublicComment } from '../lib/types';
+import { MAX_COMMENT_FILES, viewerItems, ViewerItem } from '../lib/files';
+import { haptics } from '../lib/haptics';
+import type { FileDto, ImageDto, OwnerComment, PublicComment } from '../lib/types';
 import { timeAgo } from '../lib/util';
 import { EditKeyDialog } from './EditKeyDialog';
 import { Icon } from './Icon';
+import { FilePicker, FileRow } from './FilePicker';
 import { ImagePicker, MAX_COMMENT_IMAGES } from './ImagePicker';
-import { Lightbox } from './Lightbox';
+import { Viewer } from './Viewer';
 import { ConfirmDialog, Dialog, ErrorState, FieldError, haptic, Skeleton, Spinner, StatusBadge, useToast } from './ui';
 
-function Exhibits({ images, onOpen }: { images: ImageDto[]; onOpen: (i: number) => void }) {
-  if (!images.length) return null;
+function Exhibits({ images, files, onOpen }: { images: ImageDto[]; files: FileDto[]; onOpen: (i: number) => void }) {
+  if (!images.length && !files.length) return null;
   return (
-    <div className="mt-3 flex flex-wrap gap-2">
+    <div className="mt-3 space-y-2">
+    <div className="flex flex-wrap gap-2">
       {images.map((img, i) => (
         <button key={img.id} onClick={() => onOpen(i)} className="relative h-20 w-20 overflow-hidden rounded-xl border border-black/10 bg-white p-1 transition-transform duration-100 active:scale-95" aria-label={`Open exhibit ${String.fromCharCode(65 + i)}`}>
           <img src={img.thumb} alt="" crossOrigin="anonymous" loading="lazy" className="h-full w-full rounded-lg object-cover" />
           <span className="absolute bottom-1.5 left-1.5 rounded bg-ink/85 px-1 font-mono text-[0.55rem] text-white">{String.fromCharCode(65 + i)}</span>
         </button>
       ))}
+    </div>
+      {files.map((f, j) => <FileRow key={f.id} file={f} onOpen={() => onOpen(images.length + j)} />)}
     </div>
   );
 }
@@ -39,6 +45,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
   const [mine, setMine] = useState<OwnerComment[]>([]);
   const [text, setText] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [docs, setDocs] = useState<File[]>([]);
   const [resetKey, setResetKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
@@ -47,10 +54,11 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editRemoved, setEditRemoved] = useState<string[]>([]);
+  const [editRemovedFiles, setEditRemovedFiles] = useState<string[]>([]);
   const [toDelete, setToDelete] = useState<OwnerComment | null>(null);
   const [toReport, setToReport] = useState<PublicComment | null>(null);
   const [reported, setReported] = useState<Set<string>>(new Set());
-  const [viewer, setViewer] = useState<{ images: ImageDto[]; index: number } | null>(null);
+  const [viewer, setViewer] = useState<{ items: ViewerItem[]; index: number } | null>(null);
 
   const load = useCallback(
     async (next?: string | null) => {
@@ -101,10 +109,13 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
       const fd = new FormData();
       fd.append('content', text);
       files.forEach((f) => fd.append('images', f));
+      docs.forEach((f) => fd.append('files', f));
       const { comment, editKey } = await api.createComment(postId, fd, setProgress);
       const saved = storage.saveCommentKey(postId, comment.id, editKey);
       setText('');
       setFiles([]);
+      setDocs([]);
+      haptics.success();
       setResetKey((k) => k + 1);
       setComposerOpen(false);
       setNewKey({ key: editKey, saved });
@@ -127,6 +138,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
       const fd = new FormData();
       if (editText !== c.content) fd.append('content', editText);
       editRemoved.forEach((id) => fd.append('removeImageIds', id));
+      editRemovedFiles.forEach((id) => fd.append('removeFileIds', id));
       await api.updateComment(c.id, key, fd);
       toast('success', 'Statement updated.');
       setEditing(null);
@@ -219,6 +231,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
                       ))}
                     </div>
                   )}
+                  {c.files.filter((d) => !editRemovedFiles.includes(d.id)).map((d) => <FileRow key={d.id} file={d} onRemove={() => setEditRemovedFiles((r) => [...r, d.id])} />)}
                   <div className="grid grid-cols-2 gap-2">
                     <button className="btn-secondary" onClick={() => setEditing(null)}>Cancel</button>
                     <button className="btn-primary" disabled={busy || editText.trim().length < 2} onClick={() => saveEdit(c)}>Save</button>
@@ -227,9 +240,9 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
               ) : (
                 <>
                   <p className="prose-plain text-sm">{c.content}</p>
-                  <Exhibits images={c.images} onOpen={(i) => setViewer({ images: c.images, index: i })} />
+                  <Exhibits images={c.images} files={c.files} onOpen={(i) => setViewer({ items: viewerItems(c.images, c.files), index: i })} />
                   <div className="mt-3 flex gap-2">
-                    <button className="btn-secondary !min-h-10 !px-3.5 !text-[0.82rem]" onClick={() => { setEditing(c.id); setEditText(c.content); setEditRemoved([]); }}><Icon name="edit" size={16} /> Edit</button>
+                    <button className="btn-secondary !min-h-10 !px-3.5 !text-[0.82rem]" onClick={() => { setEditing(c.id); setEditText(c.content); setEditRemoved([]); setEditRemovedFiles([]); }}><Icon name="edit" size={16} /> Edit</button>
                     <button className="btn-ghost !min-h-10 !px-3.5 !text-[0.82rem] !text-red-600" onClick={() => { haptic(8); setToDelete(c); }}><Icon name="trash" size={16} /> Withdraw</button>
                   </div>
                 </>
@@ -241,16 +254,16 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
 
       {items.length > 0 && (
         <Stagger className="relative space-y-5 border-l-2 border-folder-deep/80 pl-5">
-          {items.map((c, i) => {
+          {items.map((c) => {
             const isMine = Boolean(storage.getCommentKey(c.id));
             const done = reported.has(c.id) || storage.hasReported(c.id);
             return (
               <StaggerItem key={c.id}>
                 <article className="relative">
                   <span className="absolute top-1.5 -left-[1.72rem] h-3 w-3 rounded-full border-2 border-folder-deep bg-paper" aria-hidden="true" />
-                  <p className="font-mono text-[0.7rem] tracking-[0.12em] text-[#9b7621] uppercase">Statement {i + 1} · {timeAgo(c.createdAt)}</p>
+                  <p className="font-mono text-[0.7rem] tracking-[0.12em] text-[#9b7621] uppercase">Statement · {timeAgo(c.createdAt)}</p>
                   <p className="prose-plain mt-1 text-[0.95rem]">{c.content}</p>
-                  <Exhibits images={c.images} onOpen={(idx) => setViewer({ images: c.images, index: idx })} />
+                  <Exhibits images={c.images} files={c.files} onOpen={(idx) => setViewer({ items: viewerItems(c.images, c.files), index: idx })} />
                   {!isMine && (
                     <button className="btn-ghost mt-2 !min-h-9 !rounded-lg !px-2.5 !text-xs" disabled={done} onClick={() => setToReport(c)}>
                       <Icon name="flag" size={15} /> {done ? 'Reported' : 'Report'}
@@ -265,7 +278,11 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
       {loading && <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-16 w-full" />)}</div>}
       {error && <ErrorState message={error.message} onRetry={() => load(cursor)} />}
       {!loading && !error && items.length === 0 && <p className="text-sm text-ink-soft">No statements on file yet. Add the first one.</p>}
-      {hasMore && !loading && <button className="btn-secondary mt-5" onClick={() => load(cursor)}>Load more statements</button>}
+      {hasMore && !loading && (
+        <button className="chrome mx-auto mt-5 flex min-h-11 items-center gap-1 px-3 text-xs font-bold text-brand-700 underline underline-offset-4" onClick={() => load(cursor)}>
+          Load 5 more
+        </button>
+      )}
 
       <Dialog open={composerOpen} onClose={() => !busy && setComposerOpen(false)} title="Add a statement">
         <form onSubmit={submit} className="space-y-4">
@@ -275,19 +292,22 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
             <FieldError messages={fieldErr} />
             <p className="mt-1 text-right text-xs text-ink-soft">{text.length}/2000</p>
           </div>
-          <ImagePicker compact slots={MAX_COMMENT_IMAGES} onChange={setFiles} onError={(m) => toast('error', m)} resetKey={resetKey} />
+          <div className="space-y-2.5">
+            <ImagePicker compact slots={MAX_COMMENT_IMAGES} onChange={setFiles} onError={(m) => toast('error', m)} resetKey={resetKey} />
+            <FilePicker compact slots={MAX_COMMENT_FILES} onChange={setDocs} onError={(m) => toast('error', m)} resetKey={resetKey} />
+          </div>
           <p className="flex items-center gap-1.5 text-xs text-ink-soft"><Icon name="lock" size={13} /> Anonymous. Published immediately; anyone can report it.</p>
           <button className="btn-primary w-full" disabled={busy || text.trim().length < 2}>
             {busy ? <Spinner /> : <Icon name="file" size={19} />}
-            {busy ? (progress != null && progress < 100 && files.length ? `Uploading ${progress}%` : 'Filing…') : 'File statement'}
+            {busy ? (progress != null && progress < 100 && (files.length || docs.length) ? `Uploading ${progress}%` : 'Filing…') : 'File statement'}
           </button>
         </form>
       </Dialog>
 
       <EditKeyDialog open={newKey !== null} editKey={newKey?.key ?? ''} kind="statement" savedLocally={newKey?.saved ?? false} onDone={() => { setNewKey(null); toast('success', 'Your statement is on file.'); }} />
-      <ConfirmDialog open={toDelete !== null} title="Withdraw statement?" message="This permanently removes your statement and its photos." confirmLabel="Withdraw" danger busy={busy} onConfirm={confirmDelete} onClose={() => setToDelete(null)} />
+      <ConfirmDialog open={toDelete !== null} title="Withdraw statement?" message="This permanently removes your statement, its photos and documents." confirmLabel="Withdraw" danger busy={busy} onConfirm={confirmDelete} onClose={() => setToDelete(null)} />
       <ConfirmDialog open={toReport !== null} title="Report this statement?" message="Use this for abuse, private personal details, threats or false claims. After 10 reports a statement is hidden and a moderator reviews it." confirmLabel="Report" danger busy={busy} onConfirm={confirmReport} onClose={() => setToReport(null)} />
-      <Lightbox images={viewer?.images ?? []} index={viewer ? viewer.index : null} onIndex={(i) => setViewer((v) => (v ? { ...v, index: i } : v))} onClose={() => setViewer(null)} />
+      <Viewer items={viewer?.items ?? []} index={viewer ? viewer.index : null} onIndex={(i) => setViewer((v) => (v ? { ...v, index: i } : v))} onClose={() => setViewer(null)} />
     </section>
   );
 }

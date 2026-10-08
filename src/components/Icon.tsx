@@ -72,5 +72,5 @@ export function Icon({ name, size = 20, strokeWidth = 2.3, ...rest }: { name: Ic
 
 /** App mark: Sherlock Holmes deerstalker hat. */
 export function LogoMark({ size = 36, className }: { size?: number; className?: string }) {
-  return <img src="/icons/icon-192.png" width={size} height={size} alt="" aria-hidden="true" decoding="async" className={className} style={{ borderRadius: size * 0.22 }} />;
+  return <img src="/icons/logo-256.png" width={size} height={size} alt="" aria-hidden="true" decoding="async" className={className} />;
 }

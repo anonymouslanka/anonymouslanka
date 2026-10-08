@@ -32,7 +32,7 @@ export function pwa(opts: { extraCore?: string[] } = {}): Plugin {
     generateBundle(_, bundle) {
       const built = Object.values(bundle)
         .map((f) => f.fileName)
-        .filter((f) => /\.(js|css|svg|png|woff2?)$/.test(f))
+        .filter((f) => /\.(js|css|svg|png|woff2?)$/.test(f) && !/pdf/i.test(f))
         .map((f) => `/${f}`);
       const core = [...new Set([...staticCore, ...built])];
       const version = createHash('sha1').update(core.join('|') + SW_SOURCE).digest('hex').slice(0, 10);

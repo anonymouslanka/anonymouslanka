@@ -1,15 +1,13 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { haptics } from '../lib/haptics';
 import type { ModerationStatus } from '../lib/types';
 import { cx } from '../lib/util';
 import { Icon, IconName } from './Icon';
 
-/** Light haptic tap where supported (Android / some browsers). Silent no-op elsewhere. */
+/** Kept for older call sites; the global click handler (lib/haptics) already ticks on every button. */
 export function haptic(pattern: number | number[] = 10): void {
-  try {
-    navigator.vibrate?.(pattern);
-  } catch {
-    /* ignore */
-  }
+  if (Array.isArray(pattern)) haptics.error();
+  else haptics.tap();
 }
 
 /* ───────────── Toasts (CSS animated) ───────────── */
@@ -33,7 +31,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const counter = useRef(0);
   const push = useCallback((kind: ToastKind, message: string) => {
     const id = ++counter.current;
-    if (kind === 'error') haptic([20, 40, 20]);
+    if (kind === 'error') haptics.error();
+    else if (kind === 'success') haptics.success();
     setItems((x) => [...x.slice(-2), { id, kind, message }]);
     setTimeout(() => setItems((x) => x.filter((t) => t.id !== id)), 5500);
   }, []);

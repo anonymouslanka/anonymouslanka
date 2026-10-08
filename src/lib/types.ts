@@ -9,6 +9,13 @@ export interface ImageDto {
   large: string;
 }
 
+export interface FileDto {
+  id: string;
+  name: string;
+  ext: string;
+  bytes: number;
+}
+
 export interface Category {
   slug: string;
   name: string;
@@ -23,12 +30,14 @@ export interface PostSummary {
   category: Category | null;
   images: ImageDto[];
   imageCount: number;
+  fileCount: number;
   commentCount: number;
   publishedAt: string | null;
 }
 
 export interface PostDetail extends PostSummary {
   content: string;
+  files: FileDto[];
 }
 
 export interface OwnerPost {
@@ -40,6 +49,7 @@ export interface OwnerPost {
   status: ModerationStatus;
   rejectionReason: string | null;
   images: ImageDto[];
+  files: FileDto[];
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
@@ -50,6 +60,7 @@ export interface PublicComment {
   id: string;
   content: string;
   images: ImageDto[];
+  files: FileDto[];
   createdAt: string;
 }
 
@@ -58,6 +69,7 @@ export interface OwnerComment {
   postId: string;
   content: string;
   images: ImageDto[];
+  files: FileDto[];
   status: ModerationStatus;
   rejectionReason: string | null;
   createdAt: string;

@@ -5,6 +5,17 @@
       "destination": "https://albackend.onrender.com/api/v1/sitemap.xml"
     },
     {
+      "source": "/case/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(bot|Bot|BOT|facebookexternalhit|WhatsApp|Telegram|Slack|Discord|Twitter|LinkedIn|Pinterest|Skype|Viber|Embedly|vkShare|Preview|preview|crawler|Crawler|spider|Spider|Google-InspectionTool|Mediapartners).*"
+        }
+      ],
+      "destination": "https://albackend.onrender.com/api/v1/share/:id"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -31,7 +42,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com; font-src 'self'; connect-src 'self' https://albackend.onrender.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com; font-src 'self'; connect-src 'self' https://albackend.onrender.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
         },
         {
           "key": "Cross-Origin-Opener-Policy",
