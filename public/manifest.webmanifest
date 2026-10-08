@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "DetectiveLanka",
-  "short_name": "DetectiveLanka",
+  "name": "Detective Lanka",
+  "short_name": "Detective Lanka",
   "description": "Open a case and stay anonymous. A moderated, account-free case-file app for reporting crime in Sri Lanka.",
   "start_url": "/?source=pwa",
   "scope": "/",
