@@ -10,44 +10,79 @@ export function haptic(pattern: number | number[] = 10): void {
   else haptics.tap();
 }
 
-/* ───────────── Toasts (CSS animated) ───────────── */
+/* ───────────── Notifications (CSS animated) ───────────── */
 type ToastKind = 'success' | 'error' | 'info';
 interface ToastItem {
   id: number;
   kind: ToastKind;
   message: string;
+  ms: number;
 }
 const ToastCtx = createContext<(kind: ToastKind, message: string) => void>(() => undefined);
 export const useToast = () => useContext(ToastCtx);
 
-const toastTone: Record<ToastKind, { icon: string; glyph: IconName }> = {
-  success: { icon: 'bg-emerald-100 text-emerald-700', glyph: 'check' },
-  error: { icon: 'bg-red-100 text-red-700', glyph: 'alert' },
-  info: { icon: 'bg-brand-100 text-brand-700', glyph: 'info' },
+/** Each kind has its own colour, icon motion (success pops, error shakes), title and how long it stays. */
+const toastTone: Record<ToastKind, { title: string; card: string; bubble: string; text: string; bar: string; glyph: IconName; motion: string; ms: number }> = {
+  success: { title: 'Done', card: 'border-emerald-300 bg-emerald-50', bubble: 'bg-emerald-600 text-white', text: 'text-emerald-950', bar: 'bg-emerald-500', glyph: 'check', motion: 'toast-pop', ms: 3800 },
+  error: { title: 'That didn’t work', card: 'border-red-300 bg-red-50', bubble: 'bg-red-600 text-white', text: 'text-red-950', bar: 'bg-red-500', glyph: 'alert', motion: 'toast-shake', ms: 7000 },
+  info: { title: 'Note', card: 'border-black/10 bg-[#fffdf8]', bubble: 'bg-brand-600 text-white', text: 'text-ink', bar: 'bg-brand-500', glyph: 'info', motion: 'toast-pop', ms: 4500 },
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const counter = useRef(0);
-  const push = useCallback((kind: ToastKind, message: string) => {
-    const id = ++counter.current;
-    if (kind === 'error') haptics.error();
-    else if (kind === 'success') haptics.success();
-    setItems((x) => [...x.slice(-2), { id, kind, message }]);
-    setTimeout(() => setItems((x) => x.filter((t) => t.id !== id)), 5500);
+  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+
+  const dismiss = useCallback((id: number) => {
+    const t = timers.current.get(id);
+    if (t) clearTimeout(t);
+    timers.current.delete(id);
+    setItems((x) => x.filter((i) => i.id !== id));
   }, []);
+
+  const push = useCallback(
+    (kind: ToastKind, message: string) => {
+      const id = ++counter.current;
+      const ms = toastTone[kind].ms;
+      if (kind === 'error') haptics.error();
+      else if (kind === 'success') haptics.success();
+      setItems((x) => {
+        // the same message twice is shown once (and restarts its timer)
+        const same = x.find((i) => i.kind === kind && i.message === message);
+        if (same) {
+          const t = timers.current.get(same.id);
+          if (t) clearTimeout(t);
+          timers.current.delete(same.id);
+        }
+        return [...x.filter((i) => i !== same).slice(-2), { id, kind, message, ms }];
+      });
+      timers.current.set(id, setTimeout(() => dismiss(id), ms));
+    },
+    [dismiss],
+  );
+
   return (
     <ToastCtx.Provider value={push}>
       {children}
-      <div aria-live="polite" className="pointer-events-none fixed inset-x-0 top-0 z-[80] flex flex-col items-center gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:inset-x-auto lg:right-0 lg:bottom-0 lg:top-auto lg:items-end lg:p-5">
-        {items.map((t) => (
-          <div key={t.id} role={t.kind === 'error' ? 'alert' : 'status'} className="toast-in pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border border-black/10 bg-[#fffdf8] px-4 py-3 text-sm">
-            <span className={cx('mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full', toastTone[t.kind].icon)}>
-              <Icon name={toastTone[t.kind].glyph} size={14} strokeWidth={2.6} />
-            </span>
-            <span className="text-ink">{t.message}</span>
-          </div>
-        ))}
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[80] flex flex-col items-center gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:inset-x-auto lg:right-0 lg:bottom-0 lg:top-auto lg:items-end lg:p-5">
+        {items.map((t) => {
+          const tone = toastTone[t.kind];
+          return (
+            <div key={t.id} role={t.kind === 'error' ? 'alert' : 'status'} className={cx('toast-in pointer-events-auto relative flex w-full max-w-sm items-start gap-3 overflow-hidden rounded-2xl border py-3 pr-2 pl-3.5', tone.card)}>
+              <span className={cx('mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full', tone.bubble, tone.motion)}>
+                <Icon name={tone.glyph} size={17} strokeWidth={2.8} />
+              </span>
+              <div className={cx('min-w-0 flex-1 pt-0.5', tone.text)}>
+                <p className="text-[0.95rem] leading-tight font-bold">{tone.title}</p>
+                <p className="mt-0.5 text-sm leading-snug break-words opacity-90">{t.message}</p>
+              </div>
+              <button type="button" onClick={() => dismiss(t.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-black/45 active:bg-black/10" aria-label="Dismiss notification" data-no-haptic>
+                <Icon name="x" size={16} strokeWidth={2.6} />
+              </button>
+              <span className={cx('toast-bar absolute inset-x-0 bottom-0 h-1 origin-left', tone.bar)} style={{ animationDuration: `${t.ms}ms` }} aria-hidden="true" />
+            </div>
+          );
+        })}
       </div>
     </ToastCtx.Provider>
   );

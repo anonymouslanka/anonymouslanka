@@ -45,10 +45,10 @@ function iosTick(): void {
   }
 }
 
-function fire(pattern: number | number[], ticks = 1): void {
+function fire(pattern: number | number[], ticks = 1, gap = 110, force = false): void {
   if (!enabled()) return;
   const now = Date.now();
-  if (now - last < 45) return; // never double-fire for one gesture
+  if (!force && now - last < 45) return; // never double-fire for one gesture (success/error always win)
   last = now;
   try {
     if (typeof navigator.vibrate === 'function') {
@@ -59,7 +59,7 @@ function fire(pattern: number | number[], ticks = 1): void {
     /* ignore */
   }
   iosTick();
-  for (let i = 1; i < ticks; i++) setTimeout(iosTick, i * 110);
+  for (let i = 1; i < ticks; i++) setTimeout(iosTick, i * gap);
 }
 
 export const haptics = {
@@ -67,12 +67,12 @@ export const haptics = {
   tap: () => fire(8),
   /** Toggle, tab, selection change. */
   select: () => fire(6),
-  /** Something completed. */
-  success: () => fire([10, 45, 16], 2),
+  /** Something completed: one soft, smooth pulse. */
+  success: () => fire(26, 1, 110, true),
   /** Needs attention (confirm a destructive action). */
   warning: () => fire(18),
-  /** Failure. */
-  error: () => fire([24, 50, 24, 50, 24], 3),
+  /** Failure: two sudden sharp taps in a row — a crack, not a buzz. */
+  error: () => fire([22, 55, 22], 2, 75, true),
 };
 
 /** One delegated listener gives every button, link, tab and switch a tactile tick. */

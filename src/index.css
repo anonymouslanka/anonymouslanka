@@ -280,6 +280,25 @@ dialog[open]::backdrop { animation: page-in 0.2s ease-out both; }
 @media (min-width: 640px) {
   dialog[open] { animation-name: pop-in; }
 }
+@keyframes toast-bar {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@keyframes toast-pop {
+  0% { scale: 0.4; opacity: 0; }
+  60% { scale: 1.18; opacity: 1; }
+  100% { scale: 1; }
+}
+@keyframes toast-shake {
+  0%, 100% { translate: 0; }
+  15% { translate: -5px; }
+  35% { translate: 5px; }
+  55% { translate: -3px; }
+  75% { translate: 2px; }
+}
+.toast-bar { animation: toast-bar linear forwards; opacity: 0.55; }
+.toast-pop { animation: toast-pop 0.38s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+.toast-shake { animation: toast-shake 0.42s ease-out 0.05s both; }
 .toast-in { animation: toast-in 0.22s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
