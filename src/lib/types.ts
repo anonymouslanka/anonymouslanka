@@ -49,6 +49,7 @@ export interface OwnerPost {
 export interface PublicComment {
   id: string;
   content: string;
+  images: ImageDto[];
   createdAt: string;
 }
 
@@ -56,6 +57,7 @@ export interface OwnerComment {
   id: string;
   postId: string;
   content: string;
+  images: ImageDto[];
   status: ModerationStatus;
   rejectionReason: string | null;
   createdAt: string;

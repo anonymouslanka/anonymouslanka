@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 
+/** Human case reference derived from the public id, e.g. DL-4F2K-9P7M. */
+export function caseNo(id: string): string {
+  const s = id.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return `DL-${s.slice(0, 4)}-${s.slice(4, 8)}`;
+}
+
 export const cx = (...parts: (string | false | null | undefined)[]): string => parts.filter(Boolean).join(' ');
 
 export function formatDate(iso: string | null | undefined, withTime = false): string {
@@ -28,7 +34,7 @@ export function timeAgo(iso: string | null | undefined): string {
 export function usePageMeta(opts: { title?: string; description?: string; image?: string; path?: string; noindex?: boolean }): void {
   const { title, description, image, path, noindex } = opts;
   useEffect(() => {
-    const fullTitle = title ? `${title} · Anonymous Lanka` : 'Anonymous Lanka — Speak up. Stay anonymous.';
+    const fullTitle = title ? `${title} · DetectiveLanka` : 'DetectiveLanka — Open a case. Stay anonymous.';
     document.title = fullTitle;
     const set = (attr: 'name' | 'property', key: string, value: string | undefined) => {
       let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);

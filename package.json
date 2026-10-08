@@ -1,5 +1,5 @@
 {
-  "name": "anonymous-lanka-public",
+  "name": "detectivelanka-public",
   "version": "1.0.0",
   "scripts": {
     "dev": "vite --port 5173",

@@ -1,10 +1,10 @@
-# Anonymous Lanka
+# DetectiveLanka
 
-A moderated, **account-free** platform where people in Sri Lanka can report crimes and criminals anonymously. Posts are submitted anonymously, held in a **PENDING** queue, and only become publicly visible after an administrator **approves** them.
+An installable, account-free **case-file app** for reporting crime in Sri Lanka. People *open a case* anonymously; it waits in **review** until a moderator clears it, and only cleared (**Open**) cases are public. Anyone can add **statements** (comments) — with optional photo **exhibits** — which are moderated the same way.
 
 ```
-/public   React + TS + Vite + Tailwind   → Vercel   (public website)
-/admin    React + TS + Vite + Tailwind   → Vercel   (private moderation dashboard)
+/public   React + TS + Vite + Tailwind   → Vercel   (the DetectiveLanka app / PWA)
+/admin    React + TS + Vite + Tailwind   → Vercel   (private moderation desk, also installable)
 /backend  NestJS + Prisma + PostgreSQL   → Render   (single API used by both)
               ├── Supabase PostgreSQL  (source of truth, backend-only)
               ├── Redis Cloud          (read cache only, optional)
@@ -15,6 +15,14 @@ Neither frontend ever talks to PostgreSQL, Redis or Cloudinary. They only call `
 
 ---
 
+## The app (PWA)
+
+* **Installable everywhere:** iPhone/iPad (Safari → Share → Add to Home Screen), Android (Chrome → Install app), Windows/macOS (Chrome or Edge → install icon). Full-screen standalone window, safe-area aware, bottom tab bar on phones, left rail on desktop, pull-to-refresh, haptics where supported.
+* **Offline:** a build-time service worker (`/sw.js`, versioned per build) precaches the app shell and static files; navigation falls back to the cached shell, then `/offline.html`. Recently viewed **public** case data is mirrored in localStorage by the app (`lib/api.ts`) so it can be read offline. API and image requests are never intercepted by the worker. Edit-key (owner) endpoints and admin data are never cached.
+* **Updates:** when a new build is deployed the app offers an "Update" prompt.
+* **Brand assets:** manifest + icons (any/maskable), Apple touch icon and iOS splash screens live in `public/public` (source: `icons/source.svg`). Re-generate with a small sharp script if the logo changes.
+* **Vocabulary:** post → **case**, comment → **statement**, image → **exhibit**, edit key → **case key**, approved → **Open**, pending → **Under review**, rejected → **Dismissed**. Case numbers (`DL-XXXX-XXXX`) are derived from the public id.
+
 ## How anonymity works
 
 | Topic | Design |
@@ -24,7 +32,7 @@ Neither frontend ever talks to PostgreSQL, Redis or Cloudinary. They only call `
 | Where the key lives | The user's own browser `localStorage` (`app:post-edit:<postId>`, `app:comment-edit:<commentId>`). Sent only in the `X-Edit-Key` **header** — never URLs, query strings, route params, titles, logs, Redis or Cloudinary. |
 | Isolation | A post key never works on a comment (or another post) and vice-versa. |
 | Edits | Editing a post/comment sends it back to `PENDING` (re-moderated). Edit window: `EDIT_WINDOW_DAYS` (default 180) → then `EDIT_KEY_EXPIRED`. |
-| Images | Decoded & validated server-side (magic bytes, not MIME), dimension/pixel limits, auto-oriented, **re-encoded to WebP (drops EXIF/GPS/XMP)**, uploaded under a random public id (original filename never used). |
+| Images (cases and statements) | Decoded & validated server-side (magic bytes, not MIME), dimension/pixel limits, auto-oriented, **re-encoded to WebP (drops EXIF/GPS/XMP)**, uploaded under a random public id (original filename never used). |
 | Data collected | No IPs, user agents or fingerprints are stored or logged. Request logs contain only `METHOD /path STATUS ms` (no query strings, headers or bodies). No analytics/ads/trackers; system font stack (no Google Fonts requests). |
 | Honest limits | Hosting/CDN/ISP/Supabase/Redis/Cloudinary keep their own infrastructure logs. This app cannot make a user invisible to them. The in-app Privacy page says so and recommends Tor for high-risk users. |
 
@@ -85,7 +93,7 @@ It exercises: pending-invisible/approved-visible, edit-key auth (header only, qu
 | `PUBLIC_APP_URL` `ADMIN_APP_URL` | Frontend URLs |
 | `JWT_SECRET` | ≥ 32 chars. Signs admin tokens |
 | `SESSION_SECRET` | ≥ 32 chars. HMAC pepper for edit-key verifiers. **Rotating it invalidates every existing edit key.** |
-| `MAX_IMAGES_PER_POST` `MAX_IMAGE_MB` `EDIT_WINDOW_DAYS` | Limits (defaults 4 / 5 / 180) |
+| `MAX_IMAGES_PER_POST` `MAX_COMMENT_IMAGES` `MAX_IMAGE_MB` `EDIT_WINDOW_DAYS` | Limits (defaults 4 / 2 / 5 / 180) |
 
 Generate secrets: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
 
@@ -95,7 +103,7 @@ Only `VITE_API_URL` (e.g. `https://anonymous-lanka-api.onrender.com/api/v1`). It
 
 ## Database (Supabase + Prisma)
 
-Models: `Post`, `PostImage`, `Comment`, `Category`, `AdminUser`, `AdminSession`, `ModerationLog` (+ `ModerationStatus`: PENDING/APPROVED/REJECTED). Indexed for the feed (`status, publishedAt desc, publicId desc`), category/tag filters (GIN on `tags`), comments per post, and moderation queues. Foreign keys cascade (post → images/comments).
+Models: `Post`, `PostImage`, `Comment`, `CommentImage`, `Category`, `AdminUser`, `AdminSession`, `ModerationLog` (+ `ModerationStatus`: PENDING/APPROVED/REJECTED). Indexed for the feed (`status, publishedAt desc, publicId desc`), category/tag filters (GIN on `tags`), comments per post, and moderation queues. Foreign keys cascade (post → images/comments).
 
 1. Create a Supabase project. *Project Settings → Database → Connection string*: copy the **Transaction pooler** (→ `DATABASE_URL`, add `?pgbouncer=true&connection_limit=5`) and the **Session/Direct** string (→ `DIRECT_URL`).
 2. `cd backend && npx prisma migrate deploy && npm run prisma:seed`
@@ -122,7 +130,7 @@ Create/choose a cloud, copy cloud name, API key and secret into the **backend** 
 
 ## API overview (`/api/v1`)
 
-Public: `GET /categories` · `GET /posts` · `GET /posts/:id` · `POST /posts` (multipart) · `GET|PATCH|DELETE` via `X-Edit-Key` (`/posts/:id/owner`, `/posts/:id`) · `GET|POST /posts/:id/comments` · `GET /comments/:id/owner` · `PATCH|DELETE /comments/:id` · `GET /health`
+Public: `GET /categories` · `GET /posts?cursor&limit&q&category&tag&sort=newest|oldest&exhibits=true` · `GET /posts/:id` · `POST /posts` (multipart) · `GET|PATCH|DELETE` via `X-Edit-Key` (`/posts/:id/owner`, `/posts/:id`) · `GET /posts/:id/comments` · `POST /posts/:id/comments` (multipart: `content`, `images[]` ≤ 2) · `GET /comments/:id/owner` · `PATCH|DELETE /comments/:id` (multipart edits) · `GET /health`
 
 Admin (Bearer): `POST /admin/auth/login|logout` · `GET /admin/auth/me` · `GET /admin/stats` · `GET|PATCH|DELETE /admin/posts[/:id]` · `POST /admin/posts/:id/approve|reject` · `GET /admin/comments` · `POST /admin/comments/:id/approve|reject` · `DELETE /admin/comments/:id` · `POST|DELETE /admin/categories`
 
@@ -138,8 +146,8 @@ Option A — Blueprint: *New → Blueprint* → select the repo (uses [`render.y
 Option B — manual *Web Service*: Root Directory `backend`, Build `npm ci --include=dev && npm run build && npx prisma migrate deploy`, Start `node dist/main.js`, Health Check Path `/api/v1/health`, env `NODE_VERSION=22`, `NODE_ENV=production`.
 Set every variable from the backend table in the Render dashboard (`sync: false` in the blueprint means you enter them manually). Set `CORS_ORIGINS` to the two Vercel URLs. First deploy, then run `npx prisma db seed` (Render shell) or `npm run prisma:seed` once from your machine against the production `DIRECT_URL`.
 
-### 3. Vercel (public)
-*Add New Project* → import repo → **Root Directory `public`** → Framework: Vite. Env: `VITE_API_URL=https://<render-service>.onrender.com/api/v1`. [`public/vercel.json`](public/vercel.json) adds SPA fallback and security headers.
+### 3. Vercel (public app)
+*Add New Project* → import repo → **Root Directory `public`** → Framework: Vite. Env: `VITE_API_URL=https://<render-service>.onrender.com/api/v1`. `public/vercel.json` adds the SPA fallback, security headers, `no-cache` for `/sw.js` and the right content type for the manifest. **Vercel Hobby only builds commits whose author is the account owner** — commit with the owner's GitHub no-reply identity.
 
 ### 4. Vercel (admin)
 Same, **Root Directory `admin`**, same `VITE_API_URL`. `admin/vercel.json` adds `X-Robots-Tag: noindex` and `no-store`. Consider adding Vercel *Deployment Protection* or an IP allowlist on top.

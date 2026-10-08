@@ -1,15 +1,19 @@
 @import 'tailwindcss';
 
 /*
-  Single light theme. Palette: warm paper background, rose-crimson brand,
-  saffron + teal accents (nodding to the Sri Lankan flag), ink text.
+  DetectiveLanka design system — single light theme.
+  Palette: manila paper, navy ink, crimson "rubber-stamp" brand, gold seal.
 */
+@custom-variant standalone (@media (display-mode: standalone));
+
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Sinhala', 'Noto Sans Tamil', sans-serif;
-  --font-display: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-display: ui-serif, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 
-  --color-paper: #fbf8f3;
-  --color-ink: #231f33;
+  --color-paper: #f6f2ea;
+  --color-ink: #1c2541;
+  --color-ink-soft: #4b5373;
 
   --color-brand-50: #fff1f3;
   --color-brand-100: #ffe2e7;
@@ -22,11 +26,13 @@
   --color-brand-800: #8a1a37;
   --color-brand-900: #701932;
 
-  --color-gold: #f6b01e;
-  --color-teal-soft: #d9f3ee;
+  --color-folder: #f6e3b4;
+  --color-folder-deep: #e3c987;
+  --color-seal: #b8892a;
+  --color-gold: #f2b53a;
 
-  --shadow-soft: 0 1px 2px rgb(35 31 51 / 0.04), 0 8px 24px -12px rgb(35 31 51 / 0.12);
-  --shadow-lift: 0 2px 4px rgb(35 31 51 / 0.05), 0 18px 36px -14px rgb(168 31 64 / 0.28);
+  --shadow-soft: 0 1px 2px rgb(28 37 65 / 0.05), 0 10px 26px -14px rgb(28 37 65 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(28 37 65 / 0.06), 0 22px 40px -18px rgb(28 37 65 / 0.3);
   --shadow-brand: 0 8px 20px -8px rgb(168 31 64 / 0.55);
 
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
@@ -41,14 +47,24 @@
 }
 
 html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
   scroll-behavior: smooth;
 }
 body {
   @apply bg-paper font-sans text-ink antialiased;
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
   background-image:
-    radial-gradient(60rem 30rem at 85% -10%, rgb(246 176 30 / 0.10), transparent 60%),
-    radial-gradient(50rem 28rem at -10% 0%, rgb(228 63 99 / 0.08), transparent 60%);
+    radial-gradient(60rem 28rem at 90% -8%, rgb(242 181 58 / 0.14), transparent 60%),
+    radial-gradient(50rem 26rem at -8% 0%, rgb(228 63 99 / 0.07), transparent 60%);
   background-attachment: fixed;
+}
+@media (display-mode: standalone) {
+  body { -webkit-user-select: none; user-select: none; }
+  main, article, textarea, input, [data-selectable] { -webkit-user-select: text; user-select: text; }
 }
 ::selection {
   @apply bg-brand-200 text-brand-900;
@@ -56,33 +72,52 @@ body {
 :focus-visible {
   @apply outline-2 outline-offset-2 outline-brand-500;
 }
+img { -webkit-touch-callout: none; }
+
+/* Safe areas (notches, home indicator) */
+@utility pt-safe { padding-top: env(safe-area-inset-top); }
+@utility pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+@utility pl-safe { padding-left: env(safe-area-inset-left); }
+@utility pr-safe { padding-right: env(safe-area-inset-right); }
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+@utility chrome {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
 
 @utility btn {
-  @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primary {
-  @apply btn bg-gradient-to-b from-brand-500 to-brand-700 text-white shadow-brand hover:-translate-y-px hover:to-brand-800 active:translate-y-0 active:scale-[0.98];
+  @apply btn bg-gradient-to-b from-brand-500 to-brand-700 text-white shadow-brand hover:-translate-y-px hover:to-brand-800 active:translate-y-0 active:scale-[0.97];
+}
+@utility btn-navy {
+  @apply btn bg-gradient-to-b from-[#34457f] to-ink text-white shadow-[0_8px_20px_-8px_rgb(28_37_65/0.7)] hover:-translate-y-px active:translate-y-0 active:scale-[0.97];
 }
 @utility btn-secondary {
-  @apply btn border border-stone-200 bg-white text-stone-800 shadow-sm hover:-translate-y-px hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800 active:translate-y-0 active:scale-[0.98];
+  @apply btn border border-stone-300/80 bg-white text-ink shadow-sm hover:-translate-y-px hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800 active:translate-y-0 active:scale-[0.97];
 }
 @utility btn-ghost {
-  @apply btn text-stone-600 hover:bg-brand-50 hover:text-brand-800 active:scale-[0.98];
+  @apply btn text-ink-soft hover:bg-brand-50 hover:text-brand-800 active:scale-[0.97];
 }
 @utility btn-danger {
-  @apply btn bg-gradient-to-b from-red-500 to-red-600 text-white shadow-sm hover:to-red-700 active:scale-[0.98];
+  @apply btn bg-gradient-to-b from-red-500 to-red-600 text-white shadow-sm hover:to-red-700 active:scale-[0.97];
 }
 @utility input {
-  @apply w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-ink shadow-sm transition placeholder:text-stone-400 hover:border-stone-300 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 focus:outline-none;
+  @apply w-full rounded-xl border border-stone-300/80 bg-white px-3.5 py-3 text-base text-ink shadow-sm transition placeholder:text-stone-400 hover:border-stone-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 focus:outline-none sm:text-sm;
 }
 @utility label {
-  @apply mb-1.5 block text-sm font-semibold text-stone-700;
+  @apply mb-1.5 block text-xs font-bold tracking-[0.12em] text-ink-soft uppercase;
 }
 @utility card {
-  @apply rounded-2xl border border-stone-200/70 bg-white shadow-soft;
+  @apply rounded-2xl border border-stone-200/80 bg-white shadow-soft;
 }
 @utility chip {
-  @apply relative inline-flex cursor-pointer items-center gap-1 rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:border-brand-300 hover:text-brand-700;
+  @apply relative inline-flex min-h-9 shrink-0 cursor-pointer items-center gap-1 rounded-full border border-stone-300/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700;
 }
 @utility chip-active {
   @apply border-transparent text-white hover:border-transparent hover:text-white;
@@ -91,11 +126,20 @@ body {
   @apply leading-relaxed whitespace-pre-wrap break-words;
 }
 @utility skeleton {
-  @apply animate-shimmer rounded-lg bg-[linear-gradient(90deg,#efe9e1_0%,#f8f4ee_50%,#efe9e1_100%)] bg-[length:200%_100%];
+  @apply animate-shimmer rounded-lg bg-[linear-gradient(90deg,#ebe4d6_0%,#f6f1e6_50%,#ebe4d6_100%)] bg-[length:200%_100%];
+}
+/* The rubber-stamp look used for case status */
+@utility stamp {
+  @apply inline-flex items-center rounded-md border-2 px-2 py-0.5 font-mono text-[0.68rem] font-bold tracking-[0.18em] uppercase;
+  transform: rotate(-3deg);
+}
+/* Manila folder tab that sits on top of a case file */
+@utility folder-tab {
+  @apply relative inline-flex items-center gap-1.5 rounded-t-xl bg-folder px-3 py-1 font-mono text-[0.68rem] font-bold tracking-[0.14em] text-[#7a5a14] uppercase;
 }
 
 dialog::backdrop {
-  background: rgb(35 31 51 / 0.35);
+  background: rgb(28 37 65 / 0.4);
   backdrop-filter: blur(6px);
   animation: backdrop-in 0.25s ease-out;
 }

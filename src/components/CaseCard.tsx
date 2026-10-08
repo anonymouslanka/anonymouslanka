@@ -1,0 +1,52 @@
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { itemVariants, spring } from '../lib/motion';
+import type { PostSummary } from '../lib/types';
+import { caseNo, timeAgo } from '../lib/util';
+import { Icon } from './Icon';
+
+/** One case file in the list. Animates in with its siblings (use inside <Stagger>). */
+export function CaseCard({ post }: { post: PostSummary }) {
+  const img = post.images[0];
+  return (
+    <motion.article variants={itemVariants} whileHover={{ y: -3 }} whileTap={{ scale: 0.985 }} transition={spring} className="group relative">
+      <Link
+        to={`/case/${post.id}`}
+        aria-label={`${post.title}, case ${caseNo(post.id)}`}
+        className="card flex gap-4 overflow-hidden border-l-[5px] border-l-folder-deep p-4 transition-shadow duration-300 group-hover:shadow-lift"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <span className="font-mono text-[0.68rem] font-bold tracking-[0.12em] text-[#7a5a14]">{caseNo(post.id)}</span>
+            {post.category && <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-[0.68rem] font-bold text-brand-700">{post.category.name}</span>}
+          </div>
+          <h3 className="font-display text-[1.06rem] leading-snug font-bold text-ink transition-colors group-hover:text-brand-700">{post.title}</h3>
+          <p className="mt-1.5 line-clamp-2 text-sm text-ink-soft">{post.excerpt}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
+            <span className="inline-flex items-center gap-1.5"><Icon name="clock" size={14} /> <time dateTime={post.publishedAt ?? undefined}>{timeAgo(post.publishedAt)}</time></span>
+            {post.imageCount > 0 && <span className="inline-flex items-center gap-1.5"><Icon name="image" size={14} /> {post.imageCount} exhibit{post.imageCount === 1 ? '' : 's'}</span>}
+            <span className="inline-flex items-center gap-1.5"><Icon name="chat" size={14} /> {post.commentCount}</span>
+          </div>
+        </div>
+        {img ? (
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-stone-100 sm:h-28 sm:w-28">
+            <img
+              src={img.thumb}
+              alt=""
+              crossOrigin="anonymous"
+              width={224}
+              height={224}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.07]"
+            />
+          </div>
+        ) : (
+          <div className="grid h-24 w-24 shrink-0 place-items-center rounded-xl bg-folder/55 text-[#9b7621] sm:h-28 sm:w-28" aria-hidden="true">
+            <Icon name="file" size={32} />
+          </div>
+        )}
+      </Link>
+    </motion.article>
+  );
+}
