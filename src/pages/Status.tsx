@@ -46,7 +46,7 @@ function Row({ icon, label, state }: { icon: IconName; label: string; state: 'up
 }
 
 export default function Status() {
-  usePageMeta({ title: 'System status', description: 'Live status of the DetectiveLanka service: availability, response time and uptime.', path: '/status' });
+  usePageMeta({ title: 'System status', description: 'Live status of the Detective Lanka service: availability, response time and uptime.', path: '/status' });
   const [auto, setAuto] = useState(() => {
     try {
       return localStorage.getItem('app:status-auto') !== '0';
@@ -123,7 +123,7 @@ export default function Status() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">System status</h1>
-      <p className="mt-1.5 text-sm text-ink-soft">Live availability of the DetectiveLanka service. This page checks automatically.</p>
+      <p className="mt-1.5 text-sm text-ink-soft">Live availability of the Detective Lanka service. This page checks automatically.</p>
 
       <section className={cx('card mt-6 border p-5', tone)} aria-live="polite">
         <div className="flex items-center gap-3">

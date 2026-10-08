@@ -13,7 +13,7 @@ const steps: { icon: IconName; title: string; text: string }[] = [
 export function HelpSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const link = 'flex min-h-12 items-center justify-between rounded-xl bg-black/5 px-4 text-sm font-bold active:bg-black/10';
   return (
-    <Dialog open={open} onClose={onClose} title="About DetectiveLanka" size="lg">
+    <Dialog open={open} onClose={onClose} title="About Detective Lanka" size="lg">
       <p className="text-sm text-ink-soft">
         An anonymous, moderated case-file app for Sri Lanka. Report crime, read cleared cases and add what you know — without creating an account or giving any personal details.
       </p>

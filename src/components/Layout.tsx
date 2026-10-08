@@ -8,11 +8,11 @@ import { OfflineBar, UpdateToast, usePwa } from './Pwa';
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link to="/" className="chrome flex items-center gap-2.5 rounded-xl" aria-label="DetectiveLanka home">
+    <Link to="/" className="chrome flex items-center gap-2.5 rounded-xl" aria-label="Detective Lanka home">
       <LogoMark size={compact ? 32 : 42} className="shrink-0" />
       <span className="font-display leading-none font-bold tracking-tight text-ink">
         <span className={compact ? 'text-lg' : 'text-xl'}>
-          Detective<span className="text-brand-600">Lanka</span>
+          Detective <span className="text-brand-600">Lanka</span>
         </span>
         {!compact && <span className="mt-1 block font-mono text-[0.62rem] font-normal tracking-[0.18em] text-ink-soft uppercase">Anonymous case files</span>}
       </span>

@@ -189,7 +189,7 @@ export function InstallCard() {
         <Icon name="download" size={20} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold">Install DetectiveLanka</p>
+        <p className="text-sm font-bold">Install Detective Lanka</p>
         <p className="text-xs text-ink-soft">Full-screen app, works offline.</p>
       </div>
       <button className="btn-primary !min-h-10 !px-4" onClick={install}>
@@ -222,7 +222,7 @@ function IOSInstallSheet() {
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-white">3</span>
           <span>
-            Tap <strong>Add</strong>. DetectiveLanka opens full-screen from your home screen, like any other app.
+            Tap <strong>Add</strong>. Detective Lanka opens full-screen from your home screen, like any other app.
           </span>
         </li>
       </ol>

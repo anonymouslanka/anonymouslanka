@@ -35,7 +35,7 @@ export function EditKeyDialog({
   };
 
   const download = () => {
-    const blob = new Blob([`DetectiveLanka — case key for your ${kind}\n\n${editKey}\n\nKeep this secret. Anyone with this key can edit or delete your ${kind}.\nIt cannot be recovered if lost.\n`], { type: 'text/plain' });
+    const blob = new Blob([`Detective Lanka — case key for your ${kind}\n\n${editKey}\n\nKeep this secret. Anyone with this key can edit or delete your ${kind}.\nIt cannot be recovered if lost.\n`], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -1,4 +1,4 @@
-# DetectiveLanka
+# Detective Lanka
 
 > Anonymous, moderated case-file app for Sri Lanka. People report crime without an account, a moderator reviews each case, and cleared cases are public. Installable as a web app on iPhone, Android, Windows and Mac.
 

@@ -34,10 +34,10 @@ function Page({ title, intro, children }: { title: string; intro: string; childr
 const ul = 'list-disc space-y-1.5 pl-5';
 
 export function About() {
-  usePageMeta({ title: 'Privacy', description: 'How DetectiveLanka protects your anonymity, what it does and does not collect, and the limits of that protection.', path: '/about' });
+  usePageMeta({ title: 'Privacy', description: 'How Detective Lanka protects your anonymity, what it does and does not collect, and the limits of that protection.', path: '/about' });
   const { installable, install, standalone } = usePwa();
   return (
-    <Page title="Privacy" intro="DetectiveLanka is built so that we know as little about you as possible.">
+    <Page title="Privacy" intro="Detective Lanka is built so that we know as little about you as possible.">
       <Article n={1} icon="lock" title="What we never ask for">
         <ul className={ul}>
           <li>No accounts, names, emails, phone numbers or social logins.</li>
@@ -57,7 +57,7 @@ export function About() {
         <p>We cannot make you invisible. Your internet provider, your network, and the services we rely on (hosting, database, image storage, caching) may keep their own technical logs outside our control. If your safety depends on strong anonymity, use a trusted privacy tool such as Tor Browser on a network not linked to you, and avoid details only you would know. Writing style and photo content can also identify people.</p>
       </Article>
       <Article n={5} icon="download" title="Install the app">
-        <p>DetectiveLanka is a full app you can install — no app store needed, and it keeps working offline for case files you have opened.</p>
+        <p>Detective Lanka is a full app you can install — no app store needed, and it keeps working offline for case files you have opened.</p>
         <ul className={ul}>
           <li><strong>iPhone / iPad:</strong> open in Safari → Share → Add to Home Screen.</li>
           <li><strong>Android:</strong> Chrome menu → Install app (or tap Install below).</li>
@@ -73,7 +73,7 @@ export function About() {
 }
 
 export function Guidelines() {
-  usePageMeta({ title: 'Code of conduct', description: 'Rules for opening cases and filing statements on DetectiveLanka.', path: '/guidelines' });
+  usePageMeta({ title: 'Code of conduct', description: 'Rules for opening cases and filing statements on Detective Lanka.', path: '/guidelines' });
   return (
     <Page title="Code of conduct" intro="Case files should help the public — not harass or endanger anyone.">
       <Article n={1} icon="check" title="Do">
