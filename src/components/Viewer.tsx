@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { downloadFile, fmtBytes, KIND_LABEL, ViewerItem } from '../lib/files';
+import { fmtBytes, KIND_LABEL, ViewerItem } from '../lib/files';
 import { haptics } from '../lib/haptics';
 import { cx } from '../lib/util';
 import { Icon } from './Icon';
@@ -50,37 +50,15 @@ function TextSlide({ item }: { item: FileItem }) {
 
 const Center = ({ children }: { children: React.ReactNode }) => <div className="grid h-full place-items-center px-6 text-center text-sm text-white/80"><span className="flex items-center gap-2.5">{children}</span></div>;
 
-/** Document types that browsers cannot render safely on their own (Word, Excel, PowerPoint): a clear card with Download. */
+/** Word / Excel / PowerPoint cannot be drawn safely inside the app, and files are not offered for download. */
 function Unavailable({ item, note }: { item: FileItem; note?: string }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(false);
   return (
     <div className="grid h-full place-items-center px-6">
       <div className="w-full max-w-sm rounded-3xl bg-white/10 p-6 text-center text-white">
         <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-white/15"><Icon name="file" size={32} /></span>
         <p className="mt-4 font-display text-lg font-bold break-words">{item.name}.{item.ext}</p>
         <p className="mt-1 text-sm text-white/70">{KIND_LABEL[item.ext] ?? 'Document'} · {fmtBytes(item.bytes)}</p>
-        <p className="mt-3 text-xs text-white/70">{note ?? 'A preview is not available for this file type. Download it to open it on your device.'}</p>
-        <button
-          className="btn-primary mt-5 w-full"
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            setErr(false);
-            try {
-              await downloadFile(item.url, `${item.name}.${item.ext}`);
-              haptics.success();
-            } catch {
-              setErr(true);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          {busy ? <Spinner /> : <Icon name="download" size={19} />} Download
-        </button>
-        {err && <p role="alert" className="mt-3 text-xs text-red-300">Could not download this file. Please try again.</p>}
-        <p className="mt-4 text-[0.68rem] text-white/50">User-submitted and not scanned for viruses. Open files from unknown sources with care.</p>
+        <p className="mt-3 text-xs text-white/70">{note ?? 'This file type cannot be previewed in the app. Moderators have reviewed it.'}</p>
       </div>
     </div>
   );
@@ -91,7 +69,7 @@ function Slide({ item }: { item: ViewerItem }) {
   const fail = useCallback(() => setPdfFailed(true), []);
   if (item.kind === 'image') return <ImageSlide item={item} />;
   if (item.ext === 'pdf') {
-    if (pdfFailed) return <Unavailable item={item} note="This PDF could not be shown here. You can download it instead." />;
+    if (pdfFailed) return <Unavailable item={item} note="This PDF could not be shown here. Please try again later." />;
     return (
       <Suspense fallback={<Center><Spinner /> Opening document…</Center>}>
         <PdfView url={item.url} onFail={fail} />
@@ -111,7 +89,6 @@ export function Viewer({ items, index, onIndex, onClose }: { items: ViewerItem[]
   const track = useRef<HTMLDivElement>(null);
   const settle = useRef<number>(0);
   const current = index ?? 0;
-  const [saving, setSaving] = useState(false);
 
   // Jump (no animation) on open; animate when the index changes from the arrows / keys.
   const first = useRef(true);
@@ -167,26 +144,6 @@ export function Viewer({ items, index, onIndex, onClose }: { items: ViewerItem[]
           <p className="truncate font-mono text-xs tracking-[0.14em] uppercase">{item.label}</p>
           <p className="text-[0.7rem] text-white/60">{index + 1} of {items.length}{item.kind === 'file' ? ` · ${KIND_LABEL[item.ext] ?? 'Document'}` : ''}</p>
         </div>
-        {item.kind === 'file' && (
-          <button
-            className="grid h-11 w-11 place-items-center rounded-full bg-white/15 active:bg-white/30"
-            aria-label="Download this file"
-            disabled={saving}
-            onClick={async () => {
-              setSaving(true);
-              try {
-                await downloadFile(item.url, `${item.name}.${item.ext}`);
-                haptics.success();
-              } catch {
-                haptics.error();
-              } finally {
-                setSaving(false);
-              }
-            }}
-          >
-            {saving ? <Spinner /> : <Icon name="download" size={21} />}
-          </button>
-        )}
         <button className="grid h-11 w-11 place-items-center rounded-full bg-white/15 active:bg-white/30" onClick={onClose} aria-label="Close viewer"><Icon name="x" size={22} /></button>
       </div>
 

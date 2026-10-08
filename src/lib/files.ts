@@ -27,18 +27,3 @@ export const viewerItems = (images: ImageDto[], files: FileDto[]): ViewerItem[] 
   ...images.map((img, i): ViewerItem => ({ kind: 'image', id: img.id, src: img.large, label: `Exhibit ${letter(i)}` })),
   ...files.map((f): ViewerItem => ({ kind: 'file', id: f.id, label: `${f.name}.${f.ext}`, name: f.name, ext: f.ext, bytes: f.bytes, url: fileUrl(f) })),
 ];
-
-/** Saves a document through a blob so the browser keeps the proper file name (works for installed apps too). */
-export async function downloadFile(url: string, filename: string): Promise<void> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('download failed');
-  const blob = await res.blob();
-  const href = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = href;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(href), 10_000);
-}

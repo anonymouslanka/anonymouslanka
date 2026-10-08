@@ -121,7 +121,7 @@ export default function CaseFile() {
 
       <section className="mt-6 page-in">
         <h2 className="mb-2 font-mono text-xs tracking-[0.14em] text-ink-soft uppercase">Summary of events</h2>
-        <div className="card p-5 sm:p-6"><div className="prose-plain text-[1.02rem]" data-selectable>{post.content}</div></div>
+        <div className="card p-5 sm:p-6"><div className="prose-plain text-[1.02rem]">{post.content}</div></div>
       </section>
 
       {post.images.length > 0 && (
@@ -130,7 +130,7 @@ export default function CaseFile() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {post.images.map((img, i) => (
               <button key={img.id} onClick={() => setViewer(i)} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5 text-left transition-transform duration-100 active:scale-[0.97]" aria-label={`Open exhibit ${String.fromCharCode(65 + i)}`}>
-                <img src={img.medium} alt={`Exhibit ${String.fromCharCode(65 + i)}`} crossOrigin="anonymous" width={img.width} height={img.height} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full rounded-xl object-cover" />
+                <img src={img.medium} srcSet={`${img.thumb} 480w, ${img.medium} 960w`} sizes="(min-width: 640px) 33vw, 50vw" alt={`Exhibit ${String.fromCharCode(65 + i)}`} crossOrigin="anonymous" width={img.width} height={img.height} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" className="h-full w-full rounded-xl object-cover" />
                 <span className="absolute bottom-3 left-3 rounded-md bg-ink/85 px-2 py-0.5 font-mono text-[0.62rem] tracking-[0.12em] text-white uppercase">Exhibit {String.fromCharCode(65 + i)}</span>
               </button>
             ))}

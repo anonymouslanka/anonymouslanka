@@ -69,17 +69,17 @@ body {
   overscroll-behavior-y: none;
   text-rendering: optimizeSpeed;
 }
-@media (display-mode: standalone) {
-  body { -webkit-user-select: none; user-select: none; }
-  main, article, textarea, input, [data-selectable] { -webkit-user-select: text; user-select: text; }
-}
+/* no text selection anywhere (browser and installed app); only fields and [data-selectable] stay selectable */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+textarea, input, select, [contenteditable="true"], [data-selectable] { -webkit-user-select: text; user-select: text; }
 ::selection {
   @apply bg-brand-200 text-brand-900;
 }
 :focus-visible {
   @apply outline-2 outline-offset-2 outline-brand-500;
 }
-img { -webkit-touch-callout: none; }
+img, canvas, svg { -webkit-touch-callout: none; -webkit-user-drag: none; user-drag: none; }
+@media print { html { display: none !important; } }
 
 /* iOS Safari zooms the page when a focused field is under 16px — never allow that. */
 input, select, textarea { font-size: 16px; }
