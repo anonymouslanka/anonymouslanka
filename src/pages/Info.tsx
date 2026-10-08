@@ -6,7 +6,7 @@ function Page({ title, intro, children }: { title: string; intro: string; childr
   return (
     <article className="mx-auto max-w-3xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{title}</h1>
-      <p className="mt-3 text-lg text-stone-600 dark:text-stone-400">{intro}</p>
+      <p className="mt-3 text-lg text-stone-600">{intro}</p>
       <div className="mt-8 space-y-8 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-semibold [&_li]:mt-2 [&_p]:mt-2 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5">{children}</div>
     </article>
   );
@@ -38,7 +38,7 @@ export function About() {
         <h2>Honest limits</h2>
         <p>We cannot make you invisible. Your internet provider, network, hosting and CDN providers, and the services we rely on (database, image storage, caching) may keep their own technical logs outside our control. If your safety depends on strong anonymity, use a trusted privacy tool such as Tor Browser and a network not linked to you, avoid including details only you would know, and remember writing style and photo content can identify people.</p>
       </section>
-      <p><Link to="/guidelines" className="font-semibold text-brand-700 underline dark:text-brand-300">Read the posting guidelines →</Link></p>
+      <p><Link to="/guidelines" className="font-semibold text-brand-700 underline">Read the posting guidelines →</Link></p>
     </Page>
   );
 }

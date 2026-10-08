@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Anonymous Lanka — Speak up. Stay anonymous.</title>
     <meta name="description" content="Anonymous Lanka is a moderated, no-account platform where people in Sri Lanka can report crimes and criminals anonymously. Every post is reviewed before it is published." />
-    <meta name="theme-color" content="#8d153a" />
+    <meta name="theme-color" content="#fbf8f3" />
+    <meta name="color-scheme" content="light" />
     <meta name="referrer" content="no-referrer" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:site_name" content="Anonymous Lanka" />
@@ -15,14 +16,6 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Anonymous Lanka — Speak up. Stay anonymous." />
     <meta name="twitter:description" content="A moderated, no-account platform to report crimes anonymously in Sri Lanka." />
-    <script>
-      // Apply the saved theme before first paint (prevents a flash). Purely local preference.
-      try {
-        var t = localStorage.getItem('app:theme');
-        var dark = t === 'dark' || ((!t || t === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (dark) document.documentElement.classList.add('dark');
-      } catch (e) {}
-    </script>
   </head>
   <body>
     <div id="root"></div>

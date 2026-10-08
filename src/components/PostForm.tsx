@@ -62,7 +62,7 @@ export function PostForm({
   return (
     <form onSubmit={submit} className="space-y-6" noValidate={false}>
       {error && !Object.keys(f).length && (
-        <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100">{error.message}</p>
+        <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900">{error.message}</p>
       )}
 
       <div>
@@ -98,7 +98,7 @@ export function PostForm({
         {existing.length > 0 && (
           <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {existing.map((img) => (
-              <div key={img.id} className="relative aspect-square overflow-hidden rounded-xl border border-stone-200 dark:border-stone-700">
+              <div key={img.id} className="relative aspect-square overflow-hidden rounded-xl border border-stone-200">
                 <img src={img.thumb} alt="" className="h-full w-full object-cover" />
                 <button type="button" aria-label="Remove this image" onClick={() => setRemoved((r) => [...r, img.id])} className="absolute top-1.5 right-1.5 grid h-8 w-8 place-items-center rounded-full bg-stone-950/75 text-white hover:bg-red-600">✕</button>
               </div>
@@ -110,9 +110,9 @@ export function PostForm({
       </fieldset>
 
       {!edit && (
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-stone-100 p-4 text-sm dark:bg-stone-900">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-stone-100 p-4 text-sm">
           <input type="checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--color-brand-700)]" />
-          <span>I have read the <a href="/guidelines" target="_blank" className="font-semibold text-brand-700 underline dark:text-brand-300">guidelines</a>. This report is truthful to the best of my knowledge and contains no private personal data (home addresses, phone numbers, ID numbers) of private individuals.</span>
+          <span>I have read the <a href="/guidelines" target="_blank" className="font-semibold text-brand-700 underline">guidelines</a>. This report is truthful to the best of my knowledge and contains no private personal data (home addresses, phone numbers, ID numbers) of private individuals.</span>
         </label>
       )}
 

@@ -29,7 +29,7 @@ export default function EditPost() {
       <div className="mx-auto max-w-md">
         <form onSubmit={useKey} className="card space-y-4 p-6">
           <h1 className="font-display text-2xl font-bold">Enter your edit key</h1>
-          <p className="text-sm text-stone-600 dark:text-stone-400">This device doesn’t have the key for this post. Paste the key you saved when you submitted it.</p>
+          <p className="text-sm text-stone-600">This device doesn’t have the key for this post. Paste the key you saved when you submitted it.</p>
           <input className="input font-mono text-xs" required value={keyInput} onChange={(e) => setKeyInput(e.target.value)} aria-label="Edit key" autoComplete="off" spellCheck={false} />
           <button className="btn-primary w-full">Continue</button>
         </form>
@@ -101,11 +101,11 @@ export default function EditPost() {
       </div>
       <p className="text-sm text-stone-500">Submitted {formatDate(post.createdAt, true)} · edit key valid until {formatDate(post.editExpiresAt)}</p>
       {post.status === 'REJECTED' && post.rejectionReason && (
-        <p role="note" className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-100">
+        <p role="note" className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-900">
           <strong>Moderator note:</strong> {post.rejectionReason}
         </p>
       )}
-      <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
+      <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
         Any change sends your post back to moderation, and it will be hidden from the public until approved again.
       </p>
 
@@ -113,7 +113,7 @@ export default function EditPost() {
         <PostForm initial={post} busy={busy} error={saveError} submitLabel="Save changes" onSubmit={save} />
       </div>
 
-      <div className="mt-8 flex items-center justify-between rounded-2xl border border-red-200 p-5 dark:border-red-900/60">
+      <div className="mt-8 flex items-center justify-between rounded-2xl border border-red-200 p-5">
         <div>
           <h2 className="font-semibold">Delete this post</h2>
           <p className="text-sm text-stone-500">Permanently removes the post, its images and comments.</p>

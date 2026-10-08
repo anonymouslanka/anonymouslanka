@@ -1,36 +1,54 @@
 @import 'tailwindcss';
 
-@custom-variant dark (&:where(.dark, .dark *));
-
+/*
+  Single light theme. Palette: warm paper background, rose-crimson brand,
+  saffron + teal accents (nodding to the Sri Lankan flag), ink text.
+*/
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Sinhala', 'Noto Sans Tamil', sans-serif;
   --font-display: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
 
-  --color-brand-50: #fdf2f5;
-  --color-brand-100: #fbe5ea;
-  --color-brand-200: #f6c9d4;
-  --color-brand-300: #ee9bb0;
-  --color-brand-400: #e2658a;
-  --color-brand-500: #cf3b66;
-  --color-brand-600: #b02550;
-  --color-brand-700: #8d153a;
-  --color-brand-800: #741436;
-  --color-brand-900: #5f1430;
-  --color-gold: #ffbe29;
+  --color-paper: #fbf8f3;
+  --color-ink: #231f33;
+
+  --color-brand-50: #fff1f3;
+  --color-brand-100: #ffe2e7;
+  --color-brand-200: #ffc9d3;
+  --color-brand-300: #ff9fb2;
+  --color-brand-400: #f76a88;
+  --color-brand-500: #e43f63;
+  --color-brand-600: #c92a50;
+  --color-brand-700: #a81f40;
+  --color-brand-800: #8a1a37;
+  --color-brand-900: #701932;
+
+  --color-gold: #f6b01e;
+  --color-teal-soft: #d9f3ee;
+
+  --shadow-soft: 0 1px 2px rgb(35 31 51 / 0.04), 0 8px 24px -12px rgb(35 31 51 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(35 31 51 / 0.05), 0 18px 36px -14px rgb(168 31 64 / 0.28);
+  --shadow-brand: 0 8px 20px -8px rgb(168 31 64 / 0.55);
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
 }
 
 :root {
   color-scheme: light;
-}
-:root.dark {
-  color-scheme: dark;
 }
 
 html {
   scroll-behavior: smooth;
 }
 body {
-  @apply bg-stone-50 font-sans text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100;
+  @apply bg-paper font-sans text-ink antialiased;
+  background-image:
+    radial-gradient(60rem 30rem at 85% -10%, rgb(246 176 30 / 0.10), transparent 60%),
+    radial-gradient(50rem 28rem at -10% 0%, rgb(228 63 99 / 0.08), transparent 60%);
+  background-attachment: fixed;
 }
 ::selection {
   @apply bg-brand-200 text-brand-900;
@@ -40,38 +58,51 @@ body {
 }
 
 @utility btn {
-    @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition select-none disabled:cursor-not-allowed disabled:opacity-50;
-  }
+  @apply inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50;
+}
 @utility btn-primary {
-    @apply btn bg-brand-700 text-white shadow-sm hover:bg-brand-800 active:bg-brand-900;
-  }
+  @apply btn bg-gradient-to-b from-brand-500 to-brand-700 text-white shadow-brand hover:-translate-y-px hover:to-brand-800 active:translate-y-0 active:scale-[0.98];
+}
 @utility btn-secondary {
-    @apply btn border border-stone-300 bg-white text-stone-800 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800;
-  }
+  @apply btn border border-stone-200 bg-white text-stone-800 shadow-sm hover:-translate-y-px hover:border-brand-200 hover:bg-brand-50 hover:text-brand-800 active:translate-y-0 active:scale-[0.98];
+}
 @utility btn-ghost {
-    @apply btn text-stone-700 hover:bg-stone-200/70 dark:text-stone-300 dark:hover:bg-stone-800;
-  }
+  @apply btn text-stone-600 hover:bg-brand-50 hover:text-brand-800 active:scale-[0.98];
+}
 @utility btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700;
-  }
+  @apply btn bg-gradient-to-b from-red-500 to-red-600 text-white shadow-sm hover:to-red-700 active:scale-[0.98];
+}
 @utility input {
-    @apply w-full rounded-lg border border-stone-300 bg-white px-3.5 py-2.5 text-sm text-stone-900 shadow-sm transition placeholder:text-stone-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 focus:outline-none dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100;
-  }
+  @apply w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-ink shadow-sm transition placeholder:text-stone-400 hover:border-stone-300 focus:border-brand-400 focus:ring-4 focus:ring-brand-500/10 focus:outline-none;
+}
 @utility label {
-    @apply mb-1.5 block text-sm font-medium text-stone-800 dark:text-stone-200;
-  }
+  @apply mb-1.5 block text-sm font-semibold text-stone-700;
+}
 @utility card {
-    @apply rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900;
-  }
+  @apply rounded-2xl border border-stone-200/70 bg-white shadow-soft;
+}
 @utility chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-stone-200 bg-white px-3 py-1 text-xs font-medium text-stone-700 transition hover:border-brand-300 hover:text-brand-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300;
-  }
+  @apply relative inline-flex cursor-pointer items-center gap-1 rounded-full border border-stone-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:border-brand-300 hover:text-brand-700;
+}
 @utility chip-active {
-    @apply border-brand-700 bg-brand-700 text-white hover:border-brand-700 hover:text-white;
-  }
+  @apply border-transparent text-white hover:border-transparent hover:text-white;
+}
 @utility prose-plain {
-    @apply leading-relaxed whitespace-pre-wrap break-words;
-  }
+  @apply leading-relaxed whitespace-pre-wrap break-words;
+}
+@utility skeleton {
+  @apply animate-shimmer rounded-lg bg-[linear-gradient(90deg,#efe9e1_0%,#f8f4ee_50%,#efe9e1_100%)] bg-[length:200%_100%];
+}
+
+dialog::backdrop {
+  background: rgb(35 31 51 / 0.35);
+  backdrop-filter: blur(6px);
+  animation: backdrop-in 0.25s ease-out;
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -1,11 +1,24 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { PostCard } from '../components/PostCard';
 import { EmptyState, ErrorState, PostCardSkeleton, Spinner } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { useAsync } from '../lib/hooks';
+import { ease, FloatingBlob, spring, Stagger } from '../lib/motion';
 import type { PostSummary } from '../lib/types';
 import { cx, useDebounced, usePageMeta } from '../lib/util';
+
+const words = ['Speak', 'up.', 'Stay', 'anonymous.'];
+
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.93 }} transition={spring} className={cx('chip', active && 'chip-active')} onClick={onClick} aria-pressed={active}>
+      {active && <motion.span layoutId="chip-bg" className="absolute inset-0 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 shadow-brand" transition={spring} />}
+      <span className="relative">{children}</span>
+    </motion.button>
+  );
+}
 
 export default function Home() {
   const [params, setParams] = useSearchParams();
@@ -67,42 +80,69 @@ export default function Home() {
   }, [load]);
 
   const filtered = Boolean(qParam || category || tag);
+  // Re-key the grid when filters change so the stagger animation replays.
+  const gridKey = `${qParam}|${category}|${tag}`;
 
   return (
     <div>
-      <section className="relative overflow-hidden rounded-3xl bg-brand-800 px-6 py-12 text-white sm:px-12 sm:py-16">
-        <div className="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-gold/20 blur-3xl" aria-hidden="true" />
+      <section className="relative overflow-hidden rounded-[2rem] border border-white bg-gradient-to-br from-brand-50 via-white to-amber-50 px-6 py-12 shadow-soft sm:px-12 sm:py-16">
+        <FloatingBlob className="pointer-events-none absolute -top-24 -right-10 h-72 w-72 rounded-full bg-brand-200/60 blur-3xl" />
+        <FloatingBlob className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-amber-200/60 blur-3xl" delay={2} duration={17} />
+        <FloatingBlob className="pointer-events-none absolute top-10 left-[-3rem] h-56 w-56 rounded-full bg-teal-200/50 blur-3xl" delay={4} duration={19} />
+
         <div className="relative max-w-2xl">
-          <p className="mb-3 text-sm font-semibold tracking-widest text-gold uppercase">Anonymous · Moderated · No accounts</p>
-          <h1 className="font-display text-4xl leading-tight font-bold sm:text-5xl">Speak up. Stay anonymous.</h1>
-          <p className="mt-4 text-lg text-brand-100">
+          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }} className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3.5 py-1 text-xs font-bold tracking-widest text-brand-700 uppercase backdrop-blur">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+            Anonymous · Moderated · No accounts
+          </motion.p>
+          <h1 className="font-display text-4xl leading-[1.1] font-bold sm:text-6xl" aria-label="Speak up. Stay anonymous.">
+            {words.map((w, i) => (
+              <motion.span
+                key={w}
+                aria-hidden="true"
+                initial={{ opacity: 0, y: 30, rotateX: -50 }}
+                animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                transition={{ duration: 0.65, ease, delay: 0.15 + i * 0.1 }}
+                className={cx('mr-[0.25em] inline-block', i >= 2 && 'bg-gradient-to-r from-brand-600 via-brand-500 to-amber-500 bg-clip-text text-transparent')}
+              >
+                {w}
+              </motion.span>
+            ))}
+          </h1>
+          <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.6 }} className="mt-5 max-w-xl text-lg text-stone-600">
             Report crimes and the people behind them without giving up who you are. Every post is reviewed by a moderator before it is published.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link to="/new" className="btn bg-white !px-5 text-brand-800 hover:bg-brand-50">Share a report</Link>
-            <Link to="/about" className="btn border border-white/30 text-white hover:bg-white/10">How your privacy is protected</Link>
-          </div>
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.75 }} className="mt-8 flex flex-wrap gap-3">
+            <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.96 }} transition={spring}>
+              <Link to="/new" className="btn-primary !px-6 !py-3 text-base">Share a report →</Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.96 }} transition={spring}>
+              <Link to="/about" className="btn-secondary !px-5 !py-3">How your privacy is protected</Link>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
-      <section aria-label="Search and filters" className="mt-8 space-y-4">
+      <motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease, delay: 0.35 }} aria-label="Search and filters" className="mt-8 space-y-4">
         <div className="relative">
           <label htmlFor="search" className="sr-only">Search reports</label>
           <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-stone-400" aria-hidden="true">🔎</span>
-          <input id="search" type="search" className="input !pl-10" placeholder="Search reports…" value={q} onChange={(e) => setQ(e.target.value)} maxLength={80} />
+          <input id="search" type="search" className="input !rounded-2xl !py-3 !pl-10" placeholder="Search reports…" value={q} onChange={(e) => setQ(e.target.value)} maxLength={80} />
         </div>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
-          <button className={cx('chip', !category && 'chip-active')} onClick={() => setParam('category', '')} aria-pressed={!category}>All</button>
+          <Chip active={!category} onClick={() => setParam('category', '')}>All</Chip>
           {categories.data?.map((c) => (
-            <button key={c.slug} className={cx('chip', category === c.slug && 'chip-active')} onClick={() => setParam('category', category === c.slug ? '' : c.slug)} aria-pressed={category === c.slug}>
-              {c.name}
-            </button>
+            <Chip key={c.slug} active={category === c.slug} onClick={() => setParam('category', category === c.slug ? '' : c.slug)}>{c.name}</Chip>
           ))}
-          {tag && (
-            <button className="chip chip-active" onClick={() => setParam('tag', '')} aria-label={`Remove tag filter ${tag}`}>#{tag} ✕</button>
-          )}
+          <AnimatePresence>
+            {tag && (
+              <motion.button initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.6, opacity: 0 }} transition={spring} className="chip border-teal-300 bg-teal-50 text-teal-800" onClick={() => setParam('tag', '')} aria-label={`Remove tag filter ${tag}`}>
+                #{tag} ✕
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
-      </section>
+      </motion.section>
 
       <section aria-live="polite" className="mt-6">
         {error ? (
@@ -116,13 +156,19 @@ export default function Home() {
                 action={filtered ? <button className="btn-secondary" onClick={() => { setQ(''); setParams({}, { replace: true }); }}>Clear filters</button> : <Link to="/new" className="btn-primary">Share a report</Link>}
               />
             )}
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((p, i) => <PostCard key={p.id} post={p} index={i} />)}
-              {loading && Array.from({ length: items.length ? 3 : 6 }, (_, i) => <PostCardSkeleton key={`s${i}`} />)}
-            </div>
+            {items.length > 0 && (
+              <Stagger key={gridKey} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map((p) => <PostCard key={p.id} post={p} />)}
+              </Stagger>
+            )}
+            {loading && (
+              <div className={cx('grid gap-5 sm:grid-cols-2 lg:grid-cols-3', items.length > 0 && 'mt-5')}>
+                {Array.from({ length: items.length ? 3 : 6 }, (_, i) => <PostCardSkeleton key={`s${i}`} />)}
+              </div>
+            )}
             {hasMore && !loading && (
               <div className="mt-8 flex justify-center">
-                <button className="btn-secondary" onClick={() => load(cursor)}>{loading && <Spinner />}Load more</button>
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} transition={spring} className="btn-secondary !px-6" onClick={() => load(cursor)}>{loading && <Spinner />}Load more</motion.button>
               </div>
             )}
           </>

@@ -1,9 +1,11 @@
+import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Comments } from '../components/Comments';
 import { ShareButton } from '../components/ShareButton';
 import { Dialog, EmptyState, ErrorState, Skeleton } from '../components/ui';
 import { api } from '../lib/api';
+import { ease, Reveal, spring } from '../lib/motion';
 import { useAsync } from '../lib/hooks';
 import { storage } from '../lib/storage';
 import { formatDate, usePageMeta } from '../lib/util';
@@ -52,9 +54,9 @@ export default function PostDetail() {
       </nav>
 
       <header>
-        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-stone-500 dark:text-stone-400">
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-stone-500">
           {post.category && (
-            <Link to={`/?category=${post.category.slug}`} className="rounded-full bg-brand-50 px-3 py-0.5 text-xs font-semibold text-brand-800 dark:bg-brand-900/30 dark:text-brand-200">{post.category.name}</Link>
+            <Link to={`/?category=${post.category.slug}`} className="rounded-full bg-brand-50 px-3 py-0.5 text-xs font-semibold text-brand-800">{post.category.name}</Link>
           )}
           <time dateTime={post.publishedAt ?? undefined}>{formatDate(post.publishedAt)}</time>
         </div>
@@ -67,22 +69,22 @@ export default function PostDetail() {
 
       {hero && (
         <figure className="mt-7">
-          <button type="button" onClick={() => setLightbox(active)} className="block w-full overflow-hidden rounded-2xl bg-stone-100 dark:bg-stone-900" aria-label="Open image full size">
-            <img src={hero.large} alt={`Image ${active + 1} of ${post.images.length} attached to this report`} width={hero.width} height={hero.height} className="max-h-[32rem] w-full object-contain" decoding="async" />
+          <button type="button" onClick={() => setLightbox(active)} className="block w-full overflow-hidden rounded-2xl bg-stone-100" aria-label="Open image full size">
+            <motion.img key={hero.id} initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease }} src={hero.large} alt={`Image ${active + 1} of ${post.images.length} attached to this report`} width={hero.width} height={hero.height} className="max-h-[32rem] w-full object-contain" decoding="async" />
           </button>
           {post.images.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Images">
               {post.images.map((img, i) => (
-                <button key={img.id} role="tab" aria-selected={i === active} onClick={() => setActive(i)} className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${i === active ? 'border-brand-700' : 'border-transparent opacity-70 hover:opacity-100'}`}>
+                <motion.button whileHover={{ y: -3 }} whileTap={{ scale: 0.94 }} transition={spring} key={img.id} role="tab" aria-selected={i === active} onClick={() => setActive(i)} className={`h-16 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${i === active ? 'border-brand-700' : 'border-transparent opacity-70 hover:opacity-100'}`}>
                   <img src={img.thumb} alt="" loading="lazy" className="h-full w-full object-cover" />
-                </button>
+                </motion.button>
               ))}
             </div>
           )}
         </figure>
       )}
 
-      <div className="prose-plain mt-8 text-[1.05rem]">{post.content}</div>
+      <Reveal><div className="prose-plain mt-8 text-[1.05rem]">{post.content}</div></Reveal>
 
       {post.tags.length > 0 && (
         <div className="mt-8 flex flex-wrap gap-2">
@@ -90,7 +92,7 @@ export default function PostDetail() {
         </div>
       )}
 
-      <p className="mt-8 rounded-xl bg-stone-100 p-4 text-xs text-stone-600 dark:bg-stone-900 dark:text-stone-400">
+      <p className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
         This is an anonymous, user-submitted report that was reviewed by a moderator but not independently verified. If you believe it contains an error or private information, please comment below or contact the authorities. In an emergency call 119.
       </p>
 

@@ -61,7 +61,7 @@ export default function MyPosts() {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="font-display text-3xl font-bold">My posts</h1>
-      <p className="mt-2 text-stone-600 dark:text-stone-400">
+      <p className="mt-2 text-stone-600">
         These posts were created from this browser. Their edit keys live only on this device — we cannot recover them if you clear your browser data.
       </p>
 
@@ -84,7 +84,7 @@ export default function MyPosts() {
               </>
             ) : (
               <>
-                <p className="text-sm text-stone-600 dark:text-stone-400">{r.problem}</p>
+                <p className="text-sm text-stone-600">{r.problem}</p>
                 <button className="btn-secondary shrink-0" onClick={() => { storage.removePost(r.id); void load(); }}>Remove from device</button>
               </>
             )}

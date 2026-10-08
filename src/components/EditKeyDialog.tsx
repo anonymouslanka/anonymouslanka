@@ -43,7 +43,7 @@ export function EditKeyDialog({
   return (
     <Dialog open={open} onClose={() => undefined} title={`Save your ${kind} edit key`} dismissable={false}>
       <div className="space-y-4 text-sm">
-        <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
+        <p className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-amber-900">
           <strong>This is the only time you will see this key.</strong> We store just a one-way fingerprint of it, so we cannot show it again or
           recover it. If you lose it, you lose the ability to edit or delete this {kind}.
         </p>
@@ -55,7 +55,7 @@ export function EditKeyDialog({
           <button className="btn-secondary" onClick={copy}>Copy key</button>
           <button className="btn-secondary" onClick={download}>Download .txt</button>
         </div>
-        <p className="text-stone-600 dark:text-stone-400">
+        <p className="text-stone-600">
           {savedLocally
             ? 'A copy was also saved in this browser only, so you can edit from this device. Clearing site data removes it — keep your own backup.'
             : 'We could not save a copy in this browser (storage is blocked). Keep the key somewhere safe.'}

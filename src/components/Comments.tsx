@@ -134,7 +134,7 @@ export function Comments({ postId }: { postId: string }) {
 
       {mine.length > 0 && (
         <div className="mt-6 space-y-3">
-          <h3 className="text-sm font-semibold text-stone-600 dark:text-stone-400">Your comments on this device</h3>
+          <h3 className="text-sm font-semibold text-stone-600">Your comments on this device</h3>
           {mine.map((c) => (
             <div key={c.id} className="card border-dashed p-4">
               <div className="mb-2 flex items-center justify-between gap-3">
@@ -166,7 +166,7 @@ export function Comments({ postId }: { postId: string }) {
 
       <div className="mt-8 space-y-4">
         {items.map((c) => (
-          <article key={c.id} className="border-b border-stone-200 pb-4 last:border-0 dark:border-stone-800">
+          <article key={c.id} className="border-b border-stone-200 pb-4 last:border-0">
             <p className="prose-plain text-[0.95rem]">{c.content}</p>
             <p className="mt-1.5 text-xs text-stone-500">Anonymous · {timeAgo(c.createdAt)}</p>
           </article>

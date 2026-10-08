@@ -35,7 +35,7 @@ export default function NewPost() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display text-3xl font-bold">Share a report</h1>
-      <p className="mt-2 text-stone-600 dark:text-stone-400">
+      <p className="mt-2 text-stone-600">
         No account, name or email. Your report is reviewed by a moderator and only appears publicly once approved. You will receive a secret edit key — keep it safe.
       </p>
       <div className="card mt-8 p-5 sm:p-7">

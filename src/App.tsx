@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { Layout, ThemeProvider } from './components/Layout';
+import { MotionConfig } from 'framer-motion';
+import { Layout } from './components/Layout';
 import { Skeleton, ToastProvider } from './components/ui';
 
 const Home = lazy(() => import('./pages/Home'));
@@ -14,7 +15,7 @@ const NotFound = lazy(() => import('./pages/Info').then((m) => ({ default: m.Not
 
 export default function App() {
   return (
-    <ThemeProvider>
+    <MotionConfig reducedMotion="user">
       <ToastProvider>
         <BrowserRouter>
           <Suspense fallback={<div className="mx-auto max-w-6xl space-y-4 p-6"><Skeleton className="h-10 w-1/2" /><Skeleton className="h-64 w-full" /></div>}>
@@ -34,6 +35,6 @@ export default function App() {
           </Suspense>
         </BrowserRouter>
       </ToastProvider>
-    </ThemeProvider>
+    </MotionConfig>
   );
 }

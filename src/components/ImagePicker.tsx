@@ -64,7 +64,7 @@ export function ImagePicker({
     <div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {items.map((it, i) => (
-          <div key={it.url} className="group relative aspect-square overflow-hidden rounded-xl border border-stone-200 dark:border-stone-700">
+          <div key={it.url} className="group relative aspect-square overflow-hidden rounded-xl border border-stone-200">
             <img src={it.url} alt={`Selected image ${i + 1}`} className="h-full w-full object-cover" />
             <button
               type="button"
@@ -80,7 +80,7 @@ export function ImagePicker({
           <button
             type="button"
             onClick={() => input.current?.click()}
-            className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-stone-300 text-center text-sm text-stone-500 transition hover:border-brand-500 hover:text-brand-700 dark:border-stone-700"
+            className="grid aspect-square place-items-center rounded-xl border-2 border-dashed border-stone-300 text-center text-sm text-stone-500 transition hover:border-brand-500 hover:text-brand-700"
           >
             <span>
               <span className="block text-2xl" aria-hidden="true">＋</span>
@@ -90,7 +90,7 @@ export function ImagePicker({
         )}
       </div>
       <input ref={input} type="file" accept={OK.join(',')} multiple className="sr-only" tabIndex={-1} onChange={(e) => add(e.target.files)} aria-label="Choose images" />
-      <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
+      <p className="mt-2 text-xs text-stone-500">
         Up to {slots} images · JPEG, PNG or WebP · max {MAX_MB} MB each. Location and camera data is automatically removed.
       </p>
     </div>
