@@ -17,8 +17,8 @@ export function pwa(opts: { extraCore?: string[] } = {}): Plugin {
     '/manifest.webmanifest',
     '/offline.html',
     '/favicon.svg',
-    '/icons/icon-192.png',
-    '/icons/icon-512.png',
+    '/icons/icon-192-v3.png',
+    '/icons/icon-512-v3.png',
     '/icons/apple-touch-icon.png',
     '/fonts/public-sans-latin-wght-normal.woff2',
     '/fonts/bitter-latin-wght-normal.woff2',
@@ -84,7 +84,7 @@ self.addEventListener('push', (event) => {
   const title = String(d.t || 'Detective Lanka').slice(0, 100);
   const options = {
     body: String(d.b || '').slice(0, 200),
-    icon: '/icons/icon-192.png',
+    icon: '/icons/icon-192-v3.png',
     badge: '/icons/favicon-32.png',
     tag: String(d.k || 'dl').slice(0, 80),
     lang: 'en',
