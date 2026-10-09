@@ -429,5 +429,7 @@ const ta: Record<string, string> = {
   "Community service": "சமூக சேவை",
   "{n} votes": "{n} வாக்குகள்",
   "Show results": "முடிவுகளைக் காட்டு",
+  "Could not load more. Tap to retry": "மேலும் ஏற்ற முடியவில்லை. மீண்டும் முயல தட்டவும்",
+  "You have reached the end": "நீங்கள் இறுதிக்கு வந்துவிட்டீர்கள்",
 };
 export default ta;

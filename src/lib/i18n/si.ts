@@ -429,5 +429,7 @@ const si: Record<string, string> = {
   "Community service": "ප්‍රජා සේවය",
   "{n} votes": "ඡන්ද {n}",
   "Show results": "ප්‍රතිඵල පෙන්වන්න",
+  "Could not load more. Tap to retry": "තවත් පූරණය කළ නොහැකි විය. නැවත උත්සාහ කිරීමට ඔබන්න",
+  "You have reached the end": "ඔබ අවසානයට පැමිණ ඇත",
 };
 export default si;

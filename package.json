@@ -1,6 +1,6 @@
 {
   "name": "detectivelanka-public",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "scripts": {
     "dev": "vite --port 5173",
     "build": "tsc --noEmit && vite build",

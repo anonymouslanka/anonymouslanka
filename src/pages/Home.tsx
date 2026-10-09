@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CaseCard } from '../components/CaseCard';
 import { Icon } from '../components/Icon';
 import { InstallCard } from '../components/Pwa';
-import { CaseRowSkeleton, Dialog, EmptyState, ErrorState, Spinner } from '../components/ui';
+import { CaseRowSkeleton, Dialog, EmptyState, ErrorState } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { useAsync } from '../lib/hooks';
 import { useT } from '../lib/i18n';
@@ -70,21 +70,27 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
+  const [moreError, setMoreError] = useState(false);
   const seq = useRef(0);
+  const sentinel = useRef<HTMLDivElement>(null);
 
   const load = useCallback(
     async (next: string | null) => {
       const id = ++seq.current;
       setLoading(true);
       setError(null);
+      setMoreError(false);
       try {
-        const page = await api.listPosts({ cursor: next, q: qParam, category, tag, sort, exhibits });
+        const page = await api.listPosts({ cursor: next, q: qParam, category, tag, sort, exhibits, limit: 12 });
         if (id !== seq.current) return;
         setItems((prev) => (next ? [...prev, ...page.items] : page.items));
         setCursor(page.meta.nextCursor);
         setHasMore(page.meta.hasMore);
       } catch (e) {
-        if (id === seq.current) setError(e as ApiError);
+        if (id === seq.current) {
+          if (next) setMoreError(true);
+          else setError(e as ApiError);
+        }
       } finally {
         if (id === seq.current) setLoading(false);
       }
@@ -96,6 +102,24 @@ export default function Home() {
     setItems([]);
     void load(null);
   }, [load]);
+
+  // Endless scroll: the next page is requested while the reader is still ~1.5 screens away from the end, so they never wait or press anything.
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !hasMore || loading || moreError) return;
+    if (!('IntersectionObserver' in window)) {
+      void load(cursor);
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        io.disconnect();
+        void load(cursor);
+      }
+    }, { rootMargin: '0px 0px 1400px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, loading, moreError, cursor, load, items.length]);
 
   const { pull, refreshing } = usePullToRefresh(() => load(null));
 
@@ -161,22 +185,22 @@ export default function Home() {
               />
             )}
             {items.length > 0 && (
-              <Stagger key={gridKey} className="grid gap-3.5 xl:grid-cols-2">
+              <Stagger key={gridKey} className="grid gap-3.5 xl:grid-cols-2 2xl:grid-cols-3">
                 {items.map((p) => <CaseCard key={p.id} post={p} />)}
               </Stagger>
             )}
             {loading && (
-              <div className={cx('grid gap-3.5 xl:grid-cols-2', items.length > 0 && 'mt-3.5')}>
+              <div className={cx('grid gap-3.5 xl:grid-cols-2 2xl:grid-cols-3', items.length > 0 && 'mt-3.5')}>
                 {Array.from({ length: items.length ? 2 : 5 }, (_, i) => <CaseRowSkeleton key={`s${i}`} />)}
               </div>
             )}
-            {hasMore && !loading && (
+            {hasMore && !loading && !moreError && <div ref={sentinel} aria-hidden="true" className="h-px" />}
+            {moreError && (
               <div className="mt-6 flex justify-center">
-                <button className="btn-secondary !px-6" onClick={() => load(cursor)}>
-                  {loading && <Spinner />} {t('Load more cases')}
-                </button>
+                <button className="btn-secondary !px-6" onClick={() => load(cursor)}>{t('Could not load more. Tap to retry')}</button>
               </div>
             )}
+            {!hasMore && !loading && items.length > 6 && <p className="mt-8 text-center text-xs text-ink-soft">{t('You have reached the end')}</p>}
           </>
         )}
       </section>

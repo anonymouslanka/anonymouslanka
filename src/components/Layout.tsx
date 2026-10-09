@@ -196,7 +196,7 @@ export function Layout() {
       <div className="min-w-0 pt-[calc(3rem+env(safe-area-inset-top))] lg:pt-0">
         <OfflineBar />
         <ConnectionBanner />
-        <main id="main" className={cx('mx-auto w-full max-w-5xl px-4 pt-5 sm:px-6 lg:px-10 lg:pt-10', hideTabs ? 'pb-[calc(2rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-12')}>
+        <main id="main" className={cx('mx-auto w-full max-w-5xl px-4 pt-5 sm:px-6 lg:px-10 lg:pt-10 2xl:max-w-[88rem]', hideTabs ? 'pb-[calc(2rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-12')}>
           <div key={pathname + lang} className="page-in">
             <Suspense fallback={<div className="space-y-4"><div className="skeleton h-10 w-1/2" /><div className="skeleton h-40 w-full" /></div>}>{outlet}</Suspense>
           </div>
