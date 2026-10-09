@@ -72,6 +72,53 @@ function withTimeout(promise, ms) {
   });
 }
 
+// ───────── Web Push ─────────
+// Only these in-app routes can be opened from a notification (no open redirects, nothing from the payload is trusted).
+function safeUrl(u) {
+  return typeof u === 'string' && /^\/(case\/[a-z0-9]{8,24}|announcement\/[a-z0-9]{20,30}|notifications)$/.test(u) ? u : '/notifications';
+}
+
+self.addEventListener('push', (event) => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = {}; }
+  const title = String(d.t || 'Detective Lanka').slice(0, 100);
+  const options = {
+    body: String(d.b || '').slice(0, 200),
+    icon: '/icons/icon-192.png',
+    badge: '/icons/favicon-32.png',
+    tag: String(d.k || 'dl').slice(0, 80),
+    lang: 'en',
+    data: { url: safeUrl(d.u) },
+  };
+  event.waitUntil((async () => {
+    // iOS requires every push to show a notification
+    await self.registration.showNotification(title, options);
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    clients.forEach((c) => c.postMessage({ type: 'push-received' }));
+  })());
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = safeUrl(event.notification.data && event.notification.data.url);
+  event.waitUntil((async () => {
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of clients) {
+      if ('focus' in c) {
+        await c.focus();
+        c.postMessage({ type: 'navigate', url });
+        return;
+      }
+    }
+    await self.clients.openWindow(url);
+  })());
+});
+
+self.addEventListener('pushsubscriptionchange', (event) => {
+  // the browser rotated the subscription: the app re-registers it the next time it opens
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => cs.forEach((c) => c.postMessage({ type: 'push-resubscribe' }))));
+});
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET') return;

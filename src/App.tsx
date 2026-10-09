@@ -12,6 +12,9 @@ const OpenCase = lazy(() => import('./pages/OpenCase'));
 const EditCase = lazy(() => import('./pages/EditCase'));
 const MyCases = lazy(() => import('./pages/MyCases'));
 const Status = lazy(() => import('./pages/Status'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const NotificationSettings = lazy(() => import('./pages/NotificationSettings'));
+const Announcement = lazy(() => import('./pages/Announcement'));
 const About = lazy(() => import('./pages/Info').then((m) => ({ default: m.About })));
 const Guidelines = lazy(() => import('./pages/Info').then((m) => ({ default: m.Guidelines })));
 const NotFound = lazy(() => import('./pages/Info').then((m) => ({ default: m.NotFound })));
@@ -40,6 +43,9 @@ export default function App() {
                   <Route path="about" element={<About />} />
                   <Route path="guidelines" element={<Guidelines />} />
                   <Route path="status" element={<Status />} />
+                  <Route path="notifications" element={<Notifications />} />
+                  <Route path="notifications/settings" element={<NotificationSettings />} />
+                  <Route path="announcement/:id" element={<Announcement />} />
                   <Route path="post/:id" element={<LegacyPost />} />
                   <Route path="new" element={<Navigate to="/open-case" replace />} />
                   <Route path="my-posts" element={<Navigate to="/my-cases" replace />} />

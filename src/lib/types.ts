@@ -81,9 +81,45 @@ export interface PageMeta {
   hasMore: boolean;
   nextCursor: string | null;
   limit: number;
+  /** notification feed only: unread items for this device */
+  unread?: number;
 }
 
 export interface Page<T> {
   items: T[];
   meta: PageMeta;
+}
+
+export interface NotificationItem {
+  id: string;
+  kind: 'CASE' | 'STATEMENT' | 'ANNOUNCEMENT';
+  title: string;
+  body: string;
+  /** in-app route, never a full URL */
+  url: string;
+  createdAt: string;
+  read: boolean;
+}
+
+export interface NotifPrefs {
+  newCases: boolean;
+  statements: boolean;
+  announcements: boolean;
+}
+
+export interface DeviceStatus {
+  prefs: NotifPrefs;
+  push: { available: boolean; subscribed: boolean };
+}
+
+export interface FollowedCase {
+  id: string;
+  title: string;
+}
+
+export interface AnnouncementPublic {
+  id: string;
+  title: string;
+  body: string;
+  publishedAt: string;
 }

@@ -1,8 +1,8 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
+import { resyncPush, UnreadCtx, useUnreadProvider } from '../lib/notify';
 import { cx } from '../lib/util';
 import { ConnectionBanner } from './ConnectionBanner';
-import { HelpSheet } from './HelpSheet';
 import { Icon, IconName, LogoMark } from './Icon';
 import { OfflineBar, UpdateToast, usePwa } from './Pwa';
 
@@ -24,21 +24,23 @@ const nav: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/', label: 'Cases', icon: 'list', end: true },
   { to: '/my-cases', label: 'My cases', icon: 'folders' },
   { to: '/guidelines', label: 'Code of conduct', icon: 'scale' },
+  { to: '/notifications', label: 'Notifications', icon: 'bell' },
   { to: '/about', label: 'Privacy', icon: 'shieldCheck' },
   { to: '/status', label: 'System status', icon: 'pulse' },
 ];
 
 /** Screens reached from the bottom tabs. Everything else is a "detail" screen and gets a Back button in the top bar. */
 const ROOTS = ['/', '/my-cases', '/guidelines', '/about'];
-const TITLES: [string, string][] = [['/case/', 'Case file'], ['/open-case', 'Open a case'], ['/edit/', 'Manage case'], ['/status', 'System status']];
+const TITLES: [string, string][] = [['/notifications/settings', 'Settings'], ['/notifications', 'Notifications'], ['/announcement/', 'Announcement'], ['/case/', 'Case file'], ['/open-case', 'Open a case'], ['/edit/', 'Manage case'], ['/status', 'System status']];
 /** Detail screens that bring their own bottom action bar (no tab bar). */
 const NO_TABS = ['/open-case', '/edit', '/case/'];
 
-function SideItem({ to, label, icon, end }: { to: string; label: string; icon: IconName; end?: boolean }) {
+function SideItem({ to, label, icon, end, badge = 0 }: { to: string; label: string; icon: IconName; end?: boolean; badge?: number }) {
   return (
     <NavLink to={to} end={end} className={({ isActive }) => cx('chrome flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-bold', isActive ? 'bg-brand-100 text-brand-800' : 'text-ink-soft active:bg-black/5')}>
       <Icon name={icon} size={20} />
       {label}
+      {badge > 0 && <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-brand-600 px-1.5 text-[0.68rem] font-bold text-white" aria-label={`${badge} unread`}>{badge > 9 ? '9+' : badge}</span>}
     </NavLink>
   );
 }
@@ -63,7 +65,7 @@ export function Layout() {
   const navigate = useNavigate();
   const outlet = useOutlet();
   const { installable, install, standalone } = usePwa();
-  const [help, setHelp] = useState(false);
+  const unread = useUnreadProvider();
   const isRoot = ROOTS.includes(pathname);
   const hideTabs = NO_TABS.some((p) => pathname.startsWith(p));
   const title = TITLES.find(([p]) => pathname.startsWith(p))?.[1] ?? 'Back';
@@ -74,7 +76,28 @@ export function Layout() {
     window.scrollTo({ top: 0 });
   }, [pathname]);
 
+  // The service worker tells the open app when a push arrives or a notification is tapped; the app re-checks, or opens that screen.
+  useEffect(() => {
+    void resyncPush();
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (e: MessageEvent) => {
+      const d = e.data as { type?: string; url?: unknown } | null;
+      if (d?.type === 'push-received') unread.refresh();
+      else if (d?.type === 'push-resubscribe') {
+        try {
+          sessionStorage.removeItem('app:push-synced');
+        } catch {
+          /* ignore */
+        }
+        void resyncPush();
+      } else if (d?.type === 'navigate' && typeof d.url === 'string' && /^\/(case\/[a-z0-9]{8,24}|announcement\/[a-z0-9]{20,30}|notifications)$/.test(d.url)) navigate(d.url);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [navigate, unread.refresh]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
+    <UnreadCtx.Provider value={unread}>
     <div className="min-h-dvh lg:pl-72">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[90] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-brand-800">
         Skip to content
@@ -84,7 +107,7 @@ export function Layout() {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col border-r border-black/10 bg-[#f8f4ea] p-5 lg:flex">
         <Logo />
         <nav aria-label="Main" className="mt-8 flex flex-col gap-1">
-          {nav.map((n) => <SideItem key={n.to} {...n} />)}
+          {nav.map((n) => <SideItem key={n.to} {...n} badge={n.to === '/notifications' ? unread.count : 0} />)}
         </nav>
         <Link to="/open-case" className="btn-primary mt-6 w-full !min-h-14 text-base">
           <Icon name="folderPlus" size={22} /> Open Case
@@ -111,9 +134,10 @@ export function Layout() {
               <span className="truncate">{title}</span>
             </button>
           )}
-          <button onClick={() => setHelp(true)} className="chrome grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" aria-label="About this app">
-            <Icon name="help" size={24} />
-          </button>
+          <Link to="/notifications" className="chrome relative grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" aria-label={unread.count > 0 ? `Notifications, ${unread.count} unread` : 'Notifications'}>
+            <Icon name="bell" size={24} />
+            {unread.count > 0 && <span className="absolute top-1 right-0.5 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded-full bg-brand-600 px-1 text-[0.62rem] leading-none font-bold text-white" aria-hidden="true">{unread.count > 9 ? '9+' : unread.count}</span>}
+          </Link>
         </div>
       </header>
 
@@ -128,7 +152,6 @@ export function Layout() {
       </div>
 
       <UpdateToast />
-      <HelpSheet open={help} onClose={() => setHelp(false)} />
 
       {/* Phones: fixed bottom tab bar (hidden on screens that have their own action bar) */}
       {!hideTabs && (
@@ -147,5 +170,6 @@ export function Layout() {
         </nav>
       )}
     </div>
+    </UnreadCtx.Provider>
   );
 }

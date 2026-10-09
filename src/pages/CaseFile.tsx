@@ -6,12 +6,12 @@ import { ShareButton } from '../components/ShareButton';
 import { Statements } from '../components/Statements';
 import { ConfirmDialog, EmptyState, ErrorState, Skeleton, StatusBadge, useToast } from '../components/ui';
 import { Viewer } from '../components/Viewer';
-import { api, ApiError } from '../lib/api';
+import { api, ApiError, deviceStore } from '../lib/api';
 import { viewerItems } from '../lib/files';
 import { haptics } from '../lib/haptics';
 import { useAsync } from '../lib/hooks';
 import { storage } from '../lib/storage';
-import { caseNo, formatDate, usePageMeta } from '../lib/util';
+import { caseNo, cx, formatDate, usePageMeta } from '../lib/util';
 
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -31,6 +31,24 @@ export default function CaseFile() {
   const [reporting, setReporting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [reported, setReported] = useState(() => storage.hasReported(`case-${id}`));
+  const [following, setFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [pushOn, setPushOn] = useState(true); // assume on until we know, so the hint never flashes
+
+  // Follow state lives on the server, per anonymous device. Nothing is created until the user taps Follow.
+  useEffect(() => {
+    if (!deviceStore.get()) {
+      setFollowing(false);
+      setPushOn(false);
+      return;
+    }
+    let dead = false;
+    api.follows().then((l) => !dead && setFollowing(l.some((f) => f.id === id))).catch(() => undefined);
+    api.deviceMe().then((s) => !dead && setPushOn(s.push.subscribed)).catch(() => undefined);
+    return () => {
+      dead = true;
+    };
+  }, [id]);
 
   usePageMeta({
     title: post ? `${post.title} (${caseNo(post.id)})` : 'Case file',
@@ -82,6 +100,27 @@ export default function CaseFile() {
 
   const mine = Boolean(storage.getPostKey(post.id));
 
+  const toggleFollow = async () => {
+    setFollowBusy(true);
+    try {
+      if (following) {
+        await api.unfollow(post.id);
+        setFollowing(false);
+        toast('info', 'You will no longer get alerts about this case.');
+      } else {
+        await api.follow(post.id);
+        setFollowing(true);
+        const s = await api.deviceMe().catch(() => null);
+        setPushOn(s?.push.subscribed ?? false);
+        toast('success', 'You are following this case. New statements will appear in your notifications.');
+      }
+    } catch (e) {
+      toast('error', (e as ApiError).message);
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
   const report = async () => {
     setBusy(true);
     try {
@@ -116,6 +155,12 @@ export default function CaseFile() {
             <Fact label="Exhibits">{post.images.length + post.files.length}</Fact>
             <Fact label="Statements">{post.commentCount}</Fact>
           </dl>
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <button className={cx('btn-secondary !min-h-11', following && '!border-brand-300 !bg-brand-50 !text-brand-800')} aria-pressed={following} onClick={toggleFollow} disabled={followBusy}>
+              <Icon name={following ? 'check' : 'bell'} size={18} /> {following ? 'Following' : 'Follow this case'}
+            </button>
+            {following && !pushOn && <Link to="/notifications/settings" className="text-xs font-bold text-brand-700 underline underline-offset-4">Turn on phone alerts</Link>}
+          </div>
         </div>
       </div>
 

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { HelpSheet } from '../components/HelpSheet';
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon, IconName } from '../components/Icon';
@@ -34,6 +36,7 @@ function Page({ title, intro, children }: { title: string; intro: string; childr
 const ul = 'list-disc space-y-1.5 pl-5';
 
 export function About() {
+  const [help, setHelp] = useState(false);
   usePageMeta({ title: 'Privacy', description: 'How Detective Lanka protects your anonymity, what it does and does not collect, and the limits of that protection.', path: '/about' });
   const { installable, install, standalone } = usePwa();
   return (
@@ -66,7 +69,9 @@ export function About() {
         {installable && !standalone && <button className="btn-primary mt-2" onClick={install}><Icon name="download" size={17} /> Install now</button>}
         {standalone && <p className="font-semibold text-emerald-700">You are running the installed app.</p>}
       </Article>
-      <p className="pt-2"><Link to="/guidelines" className="inline-flex items-center gap-1 text-sm font-bold text-brand-700">Read the code of conduct <Icon name="arrowRight" size={16} /></Link></p>
+      <p className="pt-2"><button className="inline-flex items-center gap-1 text-sm font-bold text-brand-700" onClick={() => setHelp(true)}>How Detective Lanka works <Icon name="arrowRight" size={16} /></button></p>
+      <HelpSheet open={help} onClose={() => setHelp(false)} />
+      <p><Link to="/guidelines" className="inline-flex items-center gap-1 text-sm font-bold text-brand-700">Read the code of conduct <Icon name="arrowRight" size={16} /></Link></p>
       <p><Link to="/status" className="inline-flex items-center gap-1 text-sm font-bold text-brand-700">Check system status <Icon name="arrowRight" size={16} /></Link></p>
     </Page>
   );

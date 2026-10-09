@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import type { Category, OwnerComment, OwnerPost, Page, PageMeta, PostDetail, PostSummary, PublicComment } from './types';
+import type { AnnouncementPublic, Category, DeviceStatus, FollowedCase, NotifPrefs, NotificationItem, OwnerComment, OwnerPost, Page, PageMeta, PostDetail, PostSummary, PublicComment } from './types';
 
 const baseURL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000/api/v1';
 
@@ -169,7 +169,87 @@ export interface FeedParams {
   limit?: number;
 }
 
+// ───────── anonymous device (no account): a random token kept in this browser, sent only as X-Device-Token ─────────
+const DEVICE_KEY = 'app:device';
+export const deviceStore = {
+  get(): string | null {
+    try {
+      return localStorage.getItem(DEVICE_KEY);
+    } catch {
+      return null;
+    }
+  },
+  set(token: string): void {
+    try {
+      localStorage.setItem(DEVICE_KEY, token);
+    } catch {
+      /* ignore */
+    }
+  },
+  clear(): void {
+    try {
+      localStorage.removeItem(DEVICE_KEY);
+    } catch {
+      /* ignore */
+    }
+  },
+};
+
+let creating: Promise<string> | null = null;
+async function ensureDevice(): Promise<string> {
+  const existing = deviceStore.get();
+  if (existing) return existing;
+  creating ??= call<{ token: string }>(http.post('/devices'))
+    .then((r) => {
+      deviceStore.set(r.token);
+      return r.token;
+    })
+    .finally(() => {
+      creating = null;
+    });
+  return creating;
+}
+
+type DeviceHeaders = { headers: Record<string, string> };
+/** Runs a device-authenticated request. `create` = register the device first if this browser has none yet. */
+async function withDevice<T>(run: (h: DeviceHeaders) => Promise<T>, create = true): Promise<T> {
+  let token = create ? await ensureDevice() : deviceStore.get();
+  if (!token) throw new ApiError('This device has no notification settings yet.', 0, 'NO_DEVICE');
+  try {
+    return await run({ headers: { 'X-Device-Token': token } });
+  } catch (e) {
+    if (e instanceof ApiError && e.code === 'DEVICE_REQUIRED') {
+      deviceStore.clear(); // the server forgot this device (e.g. it was unused for months)
+      if (!create) throw e;
+      token = await ensureDevice();
+      return run({ headers: { 'X-Device-Token': token } });
+    }
+    throw e;
+  }
+}
+
 export const api = {
+  // notifications
+  pushKey: () => call<{ enabled: boolean; publicKey: string | null }>(http.get('/push/key')),
+  deviceMe: () => withDevice((h) => call<DeviceStatus>(http.get('/devices/me', h))),
+  setPrefs: (p: Partial<NotifPrefs>) => withDevice((h) => call<{ prefs: NotifPrefs }>(http.patch('/devices/me', p, h))),
+  forgetDevice: async () => {
+    await withDevice((h) => call<{ deleted: true }>(http.delete('/devices/me', h)), false).catch(() => undefined);
+    deviceStore.clear();
+  },
+  subscribePush: (sub: { endpoint: string; keys: { p256dh: string; auth: string } }) => withDevice((h) => call<{ subscribed: true }>(http.post('/devices/me/push', sub, h))),
+  unsubscribePush: () => withDevice((h) => call<{ subscribed: false }>(http.delete('/devices/me/push', h)), false),
+  testPush: () => withDevice((h) => call<{ sent: boolean }>(http.post('/devices/me/push/test', {}, h))),
+  notifications: (cursor?: string | null) => withDevice((h) => callPage<NotificationItem>(http.get('/notifications', { ...h, params: { cursor: cursor || undefined } }))),
+  unreadCount: () => withDevice((h) => call<{ count: number }>(http.get('/notifications/unread-count', h)), false),
+  markRead: (ids: string[]) => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read', { ids }, h)), false),
+  markAllRead: () => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read-all', {}, h))),
+  follows: () => withDevice((h) => call<FollowedCase[]>(http.get('/follows', h)), false),
+  follow: (id: string) => withDevice((h) => call<{ following: true }>(http.put(`/posts/${id}/follow`, {}, h))),
+  unfollow: (id: string) => withDevice((h) => call<{ following: false }>(http.delete(`/posts/${id}/follow`, h)), false),
+  announcement: (id: string) => cached(`announcement:${id}`, () => call<AnnouncementPublic>(http.get(`/announcements/${id}`))),
+
+
   categories: () => cached('categories', () => call<Category[]>(http.get('/categories'))),
 
   listPosts: (p: FeedParams) =>
