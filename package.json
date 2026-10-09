@@ -10,6 +10,7 @@
   "type": "module",
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "axios": "^1.20.0",
     "framer-motion": "^14.0.0",
     "pdfjs-dist": "4.10.38",
