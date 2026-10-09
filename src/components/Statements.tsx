@@ -261,7 +261,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
               <StaggerItem key={c.id}>
                 <article className="relative">
                   <span className="absolute top-1.5 -left-[1.72rem] h-3 w-3 rounded-full border-2 border-folder-deep bg-paper" aria-hidden="true" />
-                  <p className="font-mono text-[0.7rem] tracking-[0.12em] text-[#9b7621] uppercase">Statement · {timeAgo(c.createdAt)}</p>
+                  <p className="font-mono text-[0.7rem] tracking-[0.12em] text-[#9b7621] uppercase">Statement · {timeAgo(c.createdAt)}{c.origin === 'AI' ? ' · DL-ai' : c.origin === 'STAFF' ? ' · Moderation team' : ''}</p>
                   <p className="prose-plain mt-1 text-[0.95rem]">{c.content}</p>
                   <Exhibits images={c.images} files={c.files} onOpen={(idx) => setViewer({ items: viewerItems(c.images, c.files), index: idx })} />
                   {!isMine && (

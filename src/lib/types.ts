@@ -31,6 +31,8 @@ export interface PostSummary {
   images: ImageDto[];
   imageCount: number;
   fileCount: number;
+  /** AI = compiled by the DL-ai bot from public sources, STAFF = written by a moderator, null = public submission */
+  origin?: 'AI' | 'STAFF' | null;
   commentCount: number;
   publishedAt: string | null;
 }
@@ -58,6 +60,7 @@ export interface OwnerPost {
 
 export interface PublicComment {
   id: string;
+  origin?: 'AI' | 'STAFF' | null;
   content: string;
   images: ImageDto[];
   files: FileDto[];

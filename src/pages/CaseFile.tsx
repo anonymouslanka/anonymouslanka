@@ -149,6 +149,11 @@ export default function CaseFile() {
         <div className="card relative rounded-tl-none border-folder-deep/70 bg-[#fffdf8] p-5 sm:p-7">
           <div className="absolute top-4 right-4 sm:top-6 sm:right-6"><StatusBadge status="APPROVED" /></div>
           <h1 className="max-w-[82%] font-display text-[1.65rem] leading-tight font-bold sm:text-4xl">{post.title}</h1>
+          {post.origin && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-folder px-3 py-1 text-xs font-bold text-[#7a5a14]">
+              <Icon name="info" size={14} /> {post.origin === 'AI' ? 'Compiled by DL-ai from public sources' : 'Written by the moderation team'}
+            </p>
+          )}
           <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-4 border-y border-dashed border-folder-deep py-4 sm:grid-cols-4">
             <Fact label="Filed">{formatDate(post.publishedAt)}</Fact>
             <Fact label="Case type">{post.category?.name ?? 'Not specified'}</Fact>
