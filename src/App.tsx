@@ -1,7 +1,6 @@
 import { lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { PwaProvider } from './components/Pwa';
@@ -56,7 +55,6 @@ export default function App() {
               </Routes>
             </BrowserRouter>
             <Analytics />
-            <SpeedInsights />
           </PwaProvider>
         </ToastProvider>
       </MotionProvider>
