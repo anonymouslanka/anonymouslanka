@@ -6,15 +6,15 @@ import { Icon } from './Icon';
 /** Three-step progress for a case: Filed → Under review → Open (or Dismissed). */
 export function CaseTracker({ status }: { status: ModerationStatus }) {
   const t = useT();
-  const dismissed = status === 'REJECTED';
+  const dismissed = status === 'REJECTED' || status === 'CLOSED';
   const step = status === 'PENDING' ? 1 : 2;
   const steps = [
     { label: 'Filed', done: true },
     { label: 'Under review', done: step >= 2 || dismissed, current: status === 'PENDING' },
-    { label: dismissed ? 'Dismissed' : 'Open to public', done: status === 'APPROVED' || dismissed, current: false, bad: dismissed },
+    { label: status === 'CLOSED' ? 'Closed' : dismissed ? 'Dismissed' : 'Open to public', done: status === 'APPROVED' || dismissed, current: false, bad: dismissed },
   ];
   return (
-    <ol className="flex items-center gap-1.5 text-[0.68rem] font-bold" aria-label={t('Case progress: {state}', { state: status === 'PENDING' ? t('Under review') : dismissed ? t('Dismissed') : t('Open') })}>
+    <ol className="flex items-center gap-1.5 text-[0.68rem] font-bold" aria-label={t('Case progress: {state}', { state: status === 'PENDING' ? t('Under review') : status === 'CLOSED' ? t('Closed') : dismissed ? t('Dismissed') : t('Open') })}>
       {steps.map((s, i) => (
         <li key={s.label} className="flex flex-1 items-center gap-1.5">
           <span

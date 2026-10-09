@@ -115,6 +115,7 @@ export default function Home() {
       <header className="mb-4">
         <h1 className="font-display text-3xl leading-tight font-bold sm:text-4xl">{t('Case files')}</h1>
         <p className="mt-1 max-w-xl text-sm text-ink-soft">{t('Open cases reported by the public. Every file is reviewed by a moderator before it is published.')}</p>
+        <p className="mt-3 flex max-w-xl items-start gap-2.5 rounded-2xl border border-folder-deep/60 bg-folder/40 p-3.5 text-sm text-[#5d430c]"><Icon name="scale" size={20} className="mt-0.5 shrink-0" /> <span>{t('Serious crimes that the law has not answered fairly. Read the facts, share what you know, and say — anonymously — what punishment would be just.')}</span></p>
       </header>
 
       <section aria-label={t('Search and filters')} className="mb-4 space-y-3">

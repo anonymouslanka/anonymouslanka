@@ -413,5 +413,12 @@ const si: Record<string, string> = {
   "You are offline. Check your connection and try again.": "ඔබ සබැඳි නොවේ. ඔබේ සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
   "Cannot reach the server. Check your connection and try again.": "සේවාදායකයට ළඟා විය නොහැක. ඔබේ සම්බන්ධතාව පරීක්ෂා කර නැවත උත්සාහ කරන්න.",
   "This device has no notification settings yet.": "මෙම උපාංගයට තවම දැනුම්දීම් සැකසුම් නැත.",
+  "Serious crimes that the law has not answered fairly. Read the facts, share what you know, and say — anonymously — what punishment would be just.": "නීතිය සාධාරණව පිළිතුරු නොදුන් බරපතළ අපරාධ. කරුණු කියවන්න, ඔබ දන්නා දේ බෙදාගන්න, සහ සාධාරණ දඬුවම කුමක්දැයි — නිර්නාමිකව — කියන්න.",
+  "Discuss the facts and say what punishment would be fair. Stay respectful: no names of private people and no calls for violence.": "කරුණු සාකච්ඡා කර සාධාරණ දඬුවම කුමක්දැයි කියන්න. ගෞරවයෙන් සිටින්න: පෞද්ගලික පුද්ගලයන්ගේ නම් හෝ ප්‍රචණ්ඩත්වයට ආයාචනා නොකරන්න.",
+  "Closed": "වසා ඇත",
+  "Why Detective Lanka exists": "Detective Lanka පවතින්නේ ඇයි",
+  "Some crimes are so serious that the people responsible do not receive the punishment they deserve. Detective Lanka is a place to put those cases on the record, with the facts and the sources.": "සමහර අපරාධ කොතරම් බරපතළද යත් වගකිවයුත්තන්ට ලැබිය යුතු දඬුවම නොලැබේ. Detective Lanka යනු එම නඩු කරුණු සහ මූලාශ්‍ර සමඟ වාර්තාවට ඇතුළත් කරන ස්ථානයකි.",
+  "Anyone can add what they know and say, fully anonymously, what punishment they think would be fair. The aim is an open, respectful public discussion — not harassment, and never violence.": "ඕනෑම කෙනෙකුට තමන් දන්නා දේ එක් කර, සම්පූර්ණයෙන්ම නිර්නාමිකව, සාධාරණ යැයි සිතන දඬුවම කියා සිටිය හැක. අරමුණ විවෘත, ගෞරවනීය මහජන සාකච්ඡාවකි — හිරිහැර කිරීමක් නොව, කිසිවිටක ප්‍රචණ්ඩත්වයක් නොවේ.",
+  "Only recent, serious cases are published. Old cases are closed so the list stays current.": "මෑත, බරපතළ නඩු පමණක් පළ කෙරේ. ලැයිස්තුව යාවත්කාලීනව තබා ගැනීමට පැරණි නඩු වසා දමනු ලැබේ.",
 };
 export default si;

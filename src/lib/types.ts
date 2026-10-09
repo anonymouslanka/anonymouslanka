@@ -1,4 +1,4 @@
-export type ModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type ModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CLOSED';
 
 export interface ImageDto {
   id: string;

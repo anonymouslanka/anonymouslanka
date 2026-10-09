@@ -23,13 +23,13 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   );
 }
 
-const nav: { to: string; label: string; icon: IconName; end?: boolean }[] = [
-  { to: '/', label: 'Cases', icon: 'list', end: true },
-  { to: '/my-cases', label: 'My cases', icon: 'folders' },
-  { to: '/guidelines', label: 'Code of conduct', icon: 'scale' },
-  { to: '/notifications', label: 'Notifications', icon: 'bell' },
-  { to: '/about', label: 'Privacy', icon: 'shieldCheck' },
-  { to: '/status', label: 'System status', icon: 'pulse' },
+const nav: { to: string; label: string; icon: IconName; end?: boolean; motion: string }[] = [
+  { to: '/', label: 'Cases', icon: 'list', end: true, motion: 'slide' },
+  { to: '/my-cases', label: 'My cases', icon: 'folders', motion: 'tilt' },
+  { to: '/guidelines', label: 'Code of conduct', icon: 'scale', motion: 'sway' },
+  { to: '/notifications', label: 'Notifications', icon: 'bell', motion: 'ring' },
+  { to: '/about', label: 'Privacy', icon: 'shieldCheck', motion: 'pop' },
+  { to: '/status', label: 'System status', icon: 'pulse', motion: 'beat' },
 ];
 
 /** Screens reached from the bottom tabs. Everything else is a "detail" screen and gets a Back button in the top bar. */
@@ -38,24 +38,28 @@ const TITLES: [string, string][] = [['/notifications/settings', 'Settings'], ['/
 /** Detail screens that bring their own bottom action bar (no tab bar). */
 const NO_TABS = ['/open-case', '/edit', '/case/'];
 
-function SideItem({ to, label, icon, end, badge = 0 }: { to: string; label: string; icon: IconName; end?: boolean; badge?: number }) {
+function SideItem({ to, label, icon, end, motion, badge = 0 }: { to: string; label: string; icon: IconName; end?: boolean; motion: string; badge?: number }) {
   const { t } = useI18n();
   return (
     <NavLink to={to} end={end} className={({ isActive }) => cx('chrome flex items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-bold', isActive ? 'bg-brand-100 text-brand-800' : 'text-ink-soft active:bg-black/5')}>
-      <Icon name={icon} size={20} />
-      {t(label)}
+      {({ isActive }) => (
+        <>
+          <span className={cx('mo', isActive && 'on')} data-motion={motion}><Icon name={icon} size={20} /></span>
+          {t(label)}
       {badge > 0 && <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-brand-600 px-1.5 text-[0.68rem] font-bold text-white" aria-label={t('{n} unread', { n: badge })}>{badge > 9 ? '9+' : badge}</span>}
+        </>
+      )}
     </NavLink>
   );
 }
 
-function TabItem({ to, label, icon, end }: { to: string; label: string; icon: IconName; end?: boolean }) {
+function TabItem({ to, label, icon, end, motion }: { to: string; label: string; icon: IconName; end?: boolean; motion: string }) {
   const { t } = useI18n();
   return (
     <NavLink to={to} end={end} className={({ isActive }) => cx('chrome flex min-w-0 flex-1 flex-col items-center gap-0.5 pt-2 pb-1.5 text-[0.66rem] font-bold', isActive ? 'text-brand-700' : 'text-stone-500')}>
       {({ isActive }) => (
         <>
-          <span className={cx('tab-icon', isActive && 'on')}>
+          <span className={cx('tab-icon mo', isActive && 'on')} data-motion={motion}>
             <Icon name={icon} size={22} />
           </span>
           <span className="tab-label max-w-full truncate px-0.5">{t(label)}</span>
@@ -146,10 +150,10 @@ export function Layout() {
             </button>
           )}
           <div className="flex items-center">
-          <button onClick={() => setLangOpen(true)} className="chrome grid h-11 min-w-11 place-items-center rounded-full px-2 text-[0.8rem] font-bold text-ink-soft active:bg-black/5" aria-label={t('Language')}>
-            <span lang={lang}>{lang === 'en' ? 'EN' : lang === 'si' ? 'සිං' : 'த'}</span>
+          <button onClick={() => setLangOpen(true)} className="chrome mo mo-press grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" data-motion="spin" aria-label={t('Language')}>
+            <Icon name="globe" size={23} />
           </button>
-          <Link to="/notifications" className="chrome relative grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" aria-label={unread.count > 0 ? t('Notifications, {n} unread', { n: unread.count }) : t('Notifications')}>
+          <Link to="/notifications" data-motion="ring" className="chrome mo mo-press relative grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" aria-label={unread.count > 0 ? t('Notifications, {n} unread', { n: unread.count }) : t('Notifications')}>
             <Icon name="bell" size={24} />
             {unread.count > 0 && <span className="absolute top-1 right-0.5 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded-full bg-brand-600 px-1 text-[0.62rem] leading-none font-bold text-white" aria-hidden="true">{unread.count > 9 ? '9+' : unread.count}</span>}
           </Link>
@@ -174,15 +178,15 @@ export function Layout() {
       {!hideTabs && (
         <nav aria-label={t('Primary')} className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f8f4ea] pb-safe lg:hidden">
           <div className="mx-auto flex max-w-lg items-end px-2">
-            <TabItem to="/" label="Cases" icon="list" end />
-            <TabItem to="/my-cases" label="My cases" icon="folders" />
+            <TabItem to="/" label="Cases" icon="list" end motion="slide" />
+            <TabItem to="/my-cases" label="My cases" icon="folders" motion="tilt" />
             <div className="flex flex-1 justify-center">
-              <Link to="/open-case" aria-label={t('Open a new case')} className="btn-primary -mt-5 !h-14 !min-h-14 !w-14 !rounded-2xl !p-0 ring-4 ring-[#f8f4ea]">
+              <Link to="/open-case" aria-label={t('Open a new case')} data-motion="spin" className="mo mo-press btn-primary -mt-5 !h-14 !min-h-14 !w-14 !rounded-2xl !p-0 ring-4 ring-[#f8f4ea]">
                 <Icon name="folderPlus" size={26} />
               </Link>
             </div>
-            <TabItem to="/guidelines" label="Conduct" icon="scale" />
-            <TabItem to="/about" label="Privacy" icon="shieldCheck" />
+            <TabItem to="/guidelines" label="Conduct" icon="scale" motion="sway" />
+            <TabItem to="/about" label="Privacy" icon="shieldCheck" motion="pop" />
           </div>
         </nav>
       )}

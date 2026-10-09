@@ -413,5 +413,12 @@ const ta: Record<string, string> = {
   "You are offline. Check your connection and try again.": "நீங்கள் ஆஃப்லைனில் உள்ளீர்கள். இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
   "Cannot reach the server. Check your connection and try again.": "சேவையகத்தை அடைய முடியவில்லை. இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.",
   "This device has no notification settings yet.": "இந்தச் சாதனத்தில் இன்னும் அறிவிப்பு அமைப்புகள் இல்லை.",
+  "Serious crimes that the law has not answered fairly. Read the facts, share what you know, and say — anonymously — what punishment would be just.": "சட்டம் நியாயமாகப் பதிலளிக்காத கடுமையான குற்றங்கள். உண்மைகளைப் படியுங்கள், உங்களுக்குத் தெரிந்ததைப் பகிருங்கள், எந்தத் தண்டனை நியாயம் என்பதை — அநாமதேயமாக — சொல்லுங்கள்.",
+  "Discuss the facts and say what punishment would be fair. Stay respectful: no names of private people and no calls for violence.": "உண்மைகளை விவாதித்து எந்தத் தண்டனை நியாயம் என்று சொல்லுங்கள். மரியாதையாக இருங்கள்: தனிநபர்களின் பெயர்கள் வேண்டாம், வன்முறைக்கு அழைப்பு வேண்டாம்.",
+  "Closed": "மூடப்பட்டது",
+  "Why Detective Lanka exists": "Detective Lanka ஏன் உள்ளது",
+  "Some crimes are so serious that the people responsible do not receive the punishment they deserve. Detective Lanka is a place to put those cases on the record, with the facts and the sources.": "சில குற்றங்கள் மிகக் கடுமையானவை; பொறுப்பானவர்களுக்குத் தகுந்த தண்டனை கிடைப்பதில்லை. அந்த வழக்குகளை உண்மைகள் மற்றும் ஆதாரங்களுடன் பதிவு செய்யும் இடம் Detective Lanka.",
+  "Anyone can add what they know and say, fully anonymously, what punishment they think would be fair. The aim is an open, respectful public discussion — not harassment, and never violence.": "யார் வேண்டுமானாலும் தங்களுக்குத் தெரிந்ததைச் சேர்த்து, முழுமையாக அநாமதேயமாக, எந்தத் தண்டனை நியாயம் என்று கருதுகிறார்கள் என்பதைச் சொல்லலாம். நோக்கம் திறந்த, மரியாதையான பொது விவாதம் — துன்புறுத்தல் அல்ல, ஒருபோதும் வன்முறை அல்ல.",
+  "Only recent, serious cases are published. Old cases are closed so the list stays current.": "சமீபத்திய, கடுமையான வழக்குகள் மட்டுமே வெளியிடப்படும். பட்டியல் புதியதாக இருக்க பழைய வழக்குகள் மூடப்படும்.",
 };
 export default ta;

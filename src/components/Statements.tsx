@@ -197,6 +197,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
         <span className="font-mono text-xs tracking-[0.12em] text-[#9b7621] uppercase">{t('{n} on file', { n: `${items.length}${hasMore ? '+' : ''}` })}</span>
       </div>
 
+      <p className="mb-3 text-sm text-ink-soft">{t('Discuss the facts and say what punishment would be fair. Stay respectful: no names of private people and no calls for violence.')}</p>
       <button className="btn-secondary mb-5 w-full !justify-start !rounded-2xl !py-3.5" onClick={() => setComposerOpen(true)}>
         <Icon name="chat" size={20} /> <span className="text-ink-soft">{t('Add your statement…')}</span>
       </button>

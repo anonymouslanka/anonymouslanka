@@ -45,7 +45,12 @@ export function About() {
   const { installable, install, standalone } = usePwa();
   return (
     <Page title="Privacy" intro="Detective Lanka is built so that we know as little about you as possible.">
-      <Article n={1} icon="lock" title="What we never ask for">
+      <Article n={1} icon="scale" title="Why Detective Lanka exists">
+        <p>{t('Some crimes are so serious that the people responsible do not receive the punishment they deserve. Detective Lanka is a place to put those cases on the record, with the facts and the sources.')}</p>
+        <p>{t('Anyone can add what they know and say, fully anonymously, what punishment they think would be fair. The aim is an open, respectful public discussion — not harassment, and never violence.')}</p>
+        <p>{t('Only recent, serious cases are published. Old cases are closed so the list stays current.')}</p>
+      </Article>
+      <Article n={2} icon="lock" title="What we never ask for">
         <ul className={ul}>
           <li>{t('No accounts, names, emails, phone numbers or social logins.')}</li>
           <li>{t('No advertising trackers, analytics scripts or device fingerprinting.')}</li>
@@ -53,17 +58,17 @@ export function About() {
           <li>{t('Photos are re-encoded on our server: GPS location, camera model and other embedded data are removed before storage.')}</li>
         </ul>
       </Article>
-      <Article n={2} icon="key" title="The case key">
+      <Article n={3} icon="key" title="The case key">
         <p>{t('When you open a case or file a statement we generate a random secret key and show it once. We store only a one-way fingerprint of it. Your device keeps a copy so you can manage the case from here. If you lose the key, nobody — including us — can recover it.')}</p>
         <p>{t('Every case and every statement has its own independent key; one key never unlocks another.')}</p>
       </Article>
-      <Article n={3} icon="gavel" title="Moderation">
+      <Article n={4} icon="gavel" title="Moderation">
         <p>{t('Nothing is public until a moderator clears it. Edits go back for review. Moderators never see keys.')}</p>
       </Article>
-      <Article n={4} icon="alert" title="Honest limits">
+      <Article n={5} icon="alert" title="Honest limits">
         <p>{t('We cannot make you invisible. Your internet provider, your network, and the services we rely on (hosting, database, image storage, caching) may keep their own technical logs outside our control. If your safety depends on strong anonymity, use a trusted privacy tool such as Tor Browser on a network not linked to you, and avoid details only you would know. Writing style and photo content can also identify people.')}</p>
       </Article>
-      <Article n={5} icon="download" title="Install the app">
+      <Article n={6} icon="download" title="Install the app">
         <p>{t('Detective Lanka is a full app you can install — no app store needed, and it keeps working offline for case files you have opened.')}</p>
         <ul className={ul}>
           <li><strong>{t('iPhone / iPad:')}</strong> {t('open in Safari → Share → Add to Home Screen.')}</li>

@@ -255,6 +255,7 @@ export function StatusBadge({ status }: { status: ModerationStatus }) {
     PENDING: ['Under review', 'border-amber-600/70 text-amber-700 bg-amber-50'],
     APPROVED: ['Open', 'border-emerald-600/70 text-emerald-700 bg-emerald-50'],
     REJECTED: ['Dismissed', 'border-red-600/70 text-red-700 bg-red-50'],
+    CLOSED: ['Closed', 'border-stone-500/70 text-stone-700 bg-stone-100'],
   };
   const t = useT();
   const [label, tone] = map[status];
