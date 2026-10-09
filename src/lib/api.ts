@@ -27,7 +27,7 @@ const wait = (s: number) => (s >= 3600 ? `${Math.ceil(s / 3600)} hour(s)` : s >=
 /** Friendly text for every failure the user can hit. The server's own message is used only where it is already user-safe. */
 const FRIENDLY: Record<string, string> = {
   RATE_LIMITED: 'You are doing that too often. Please wait a little and try again.',
-  UPLOAD_FAILED: 'Your photos could not be uploaded. Nothing was saved — please try again.',
+  UPLOAD_FAILED: 'Your photos could not be uploaded. Nothing was saved, please try again.',
   UPLOADS_UNAVAILABLE: 'Photo uploads are temporarily unavailable. You can submit without photos.',
   INVALID_IMAGE: 'One of the files is not a valid image.',
   UNSUPPORTED_FILE_TYPE: 'Only JPEG, PNG and WebP photos are allowed.',
@@ -121,7 +121,7 @@ const keyHeader = (key: string) => ({ headers: { 'X-Edit-Key': key } });
 /**
  * Offline reading: successful PUBLIC reads (case lists, case files, case types, statements) are mirrored into
  * localStorage so the installed app can still show recently viewed content without a connection.
- * Nothing private is ever stored here — edit-key (owner) endpoints bypass this cache entirely.
+ * Nothing private is ever stored here, edit-key (owner) endpoints bypass this cache entirely.
  */
 const CACHE_INDEX = 'app:cache-index';
 const CACHE_MAX = 40;
@@ -245,6 +245,8 @@ export const api = {
   unreadCount: () => withDevice((h) => call<{ count: number }>(http.get('/notifications/unread-count', h)), false),
   markRead: (ids: string[]) => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read', { ids }, h)), false),
   markAllRead: () => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read-all', {}, h))),
+  votes: (id: string) => call<{ total: number; counts: Record<string, number> }>(http.get(`/posts/${id}/votes`)),
+  vote: (id: string, choice: string) => withDevice((h) => call<{ total: number; counts: Record<string, number> }>(http.put(`/posts/${id}/vote`, { choice }, h))),
   follows: () => withDevice((h) => call<FollowedCase[]>(http.get('/follows', h)), false),
   follow: (id: string) => withDevice((h) => call<{ following: true }>(http.put(`/posts/${id}/follow`, {}, h))),
   unfollow: (id: string) => withDevice((h) => call<{ following: false }>(http.delete(`/posts/${id}/follow`, h)), false),

@@ -78,7 +78,7 @@ export default function NotificationSettings() {
       toast('success', t('Push notifications are on for this device.'));
       await load();
     } else if (r === 'denied') toast('error', t('Notifications are blocked. You can allow them in your browser’s site settings.'));
-    else if (r === 'dismissed') toast('info', t('No problem — you can turn them on later. Everything still appears in your notification centre.'));
+    else if (r === 'dismissed') toast('info', t('No problem, you can turn them on later. Everything still appears in your notification centre.'));
     else if (r === 'no-service-worker') toast('error', t('Push needs the installed or published app. Open the live site and try again.'));
     else if (r === 'unavailable') toast('error', t('Push notifications are not available on the server right now.'));
     else toast('error', t('Could not turn on push notifications. Please try again.'));
@@ -108,7 +108,7 @@ export default function NotificationSettings() {
     setBusy(true);
     try {
       const r = await api.testPush();
-      toast(r.sent ? 'success' : 'error', r.sent ? t('Test notification sent — it should appear in a moment.') : t('Could not send a test. Try turning push off and on again.'));
+      toast(r.sent ? 'success' : 'error', r.sent ? t('Test notification sent, it should appear in a moment.') : t('Could not send a test. Try turning push off and on again.'));
     } catch (e) {
       toast('error', (e as ApiError).message);
     } finally {
@@ -141,7 +141,7 @@ export default function NotificationSettings() {
     <div className="mx-auto max-w-2xl">
       <Link to="/notifications" className="chrome mb-3 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex"><Icon name="chevronLeft" size={18} /> {t('Notifications')}</Link>
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('Notification settings')}</h1>
-      <p className="mt-1.5 text-sm text-ink-soft">{t('Choose what you hear about. No account is needed — settings belong to this browser only.')}</p>
+      <p className="mt-1.5 text-sm text-ink-soft">{t('Choose what you hear about. No account is needed, settings belong to this browser only.')}</p>
 
       {error ? (
         <div className="mt-6"><ErrorState message={error.message} onRetry={load} /></div>
@@ -223,7 +223,7 @@ export default function NotificationSettings() {
           <Card icon="shieldCheck" title="Privacy">
             <div className="space-y-3 p-4 text-sm text-ink-soft">
               <p>{t('There are no accounts. This browser gets a random code (stored here, and only a one-way fingerprint of it on our server) so we can remember your choices and followed cases.')}</p>
-              <p>{t('Phone alerts use your browser’s push service (Google, Apple or Mozilla, depending on your device). To deliver them we keep that service’s address and encryption keys for this device — nothing else — and alerts contain only a case title, a short excerpt and a link. Those services, your network and our hosts may still see technical connection details; this is not protection from them.')}</p>
+              <p>{t('Phone alerts use your browser’s push service (Google, Apple or Mozilla, depending on your device). To deliver them we keep that service’s address and encryption keys for this device, nothing else, and alerts contain only a case title, a short excerpt and a link. Those services, your network and our hosts may still see technical connection details; this is not protection from them.')}</p>
               <button className="btn-ghost !px-0 !text-red-600" onClick={() => setForget(true)}><Icon name="trash" size={16} /> {t('Delete my notification data')}</button>
             </div>
           </Card>
@@ -232,7 +232,7 @@ export default function NotificationSettings() {
 
       <Dialog open={explain} onClose={() => setExplain(false)} title={t('Turn on push notifications?')}>
         <div className="space-y-4">
-          <p className="text-sm text-ink-soft">{t('Your browser will ask for permission next. We ask so Detective Lanka can alert you about the categories you choose — new case files, announcements and statements on cases you follow — even when the app is closed.')}</p>
+          <p className="text-sm text-ink-soft">{t('Your browser will ask for permission next. We ask so Detective Lanka can alert you about the categories you choose, new case files, announcements and statements on cases you follow, even when the app is closed.')}</p>
           <ul className="list-disc space-y-1 pl-5 text-sm text-ink-soft">
             <li>{t('No account, name or phone number is involved.')}</li>
             <li>{t('You can turn alerts off here at any time.')}</li>
@@ -243,7 +243,7 @@ export default function NotificationSettings() {
           </div>
         </div>
       </Dialog>
-      <ConfirmDialog open={forget} title={t('Delete notification data?')} message={t('This removes your settings, followed cases, read marks and any push registration for this browser — here and on our server.')} confirmLabel={t('Delete')} danger busy={busy} onConfirm={forgetAll} onClose={() => setForget(false)} />
+      <ConfirmDialog open={forget} title={t('Delete notification data?')} message={t('This removes your settings, followed cases, read marks and any push registration for this browser, here and on our server.')} confirmLabel={t('Delete')} danger busy={busy} onConfirm={forgetAll} onClose={() => setForget(false)} />
     </div>
   );
 }

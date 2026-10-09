@@ -4,7 +4,7 @@ import type { PostSummary } from '../lib/types';
 import { caseNo, timeAgo } from '../lib/util';
 import { Icon } from './Icon';
 
-/** One case file in the list. Plain CSS press feedback — no hover effects, no shadows. */
+/** One case file in the list. Plain CSS press feedback, no hover effects, no shadows. */
 export function CaseCard({ post }: { post: PostSummary }) {
   const t = useT();
   const img = post.images[0];

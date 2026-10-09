@@ -44,7 +44,7 @@ export default function OpenCase() {
         <Icon name="chevronLeft" size={18} /> {t('Back')}
       </button>
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('Open a case')}</h1>
-      <p className="mt-1.5 mb-6 text-sm text-ink-soft">{t('Your case file is reviewed by a moderator and appears publicly only once it is cleared. You will receive a secret case key — keep it safe.')}</p>
+      <p className="mt-1.5 mb-6 text-sm text-ink-soft">{t('Your case file is reviewed by a moderator and appears publicly only once it is cleared. You will receive a secret case key, keep it safe.')}</p>
       <CaseForm busy={busy} progress={progress} error={error} submitLabel="Open case" onSubmit={submit} />
 
       <EditKeyDialog

@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import { resyncPush, UnreadCtx, useUnreadProvider } from '../lib/notify';
@@ -51,6 +51,38 @@ function SideItem({ to, label, icon, end, motion, badge = 0 }: { to: string; lab
       )}
     </NavLink>
   );
+}
+
+/** Marker that slides under the active tab (its position is measured, so it also works at any width or language). */
+function TabWorm({ watch }: { watch: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const bar = el?.parentElement;
+    if (!el || !bar) return;
+    let first = true;
+    const place = () => {
+      const icon = bar.querySelector<HTMLElement>('a[aria-current="page"] .tab-icon');
+      if (!icon) {
+        el.style.opacity = '0';
+        return;
+      }
+      const b = bar.getBoundingClientRect();
+      const r = icon.getBoundingClientRect();
+      el.style.opacity = '1';
+      el.style.transform = `translateX(${Math.round(r.left - b.left + r.width / 2 - 14)}px)`;
+      if (!first) {
+        el.classList.remove('go');
+        void el.offsetWidth;
+        el.classList.add('go');
+      }
+      first = false;
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [watch]);
+  return <span ref={ref} className="tab-worm" aria-hidden="true" />;
 }
 
 function TabItem({ to, label, icon, end, motion }: { to: string; label: string; icon: IconName; end?: boolean; motion: string }) {
@@ -177,7 +209,8 @@ export function Layout() {
       {/* Phones: fixed bottom tab bar (hidden on screens that have their own action bar) */}
       {!hideTabs && (
         <nav aria-label={t('Primary')} className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[#f8f4ea] pb-safe lg:hidden">
-          <div className="mx-auto flex max-w-lg items-end px-2">
+          <div className="relative mx-auto flex max-w-lg items-end px-2">
+            <TabWorm watch={pathname + lang} />
             <TabItem to="/" label="Cases" icon="list" end motion="slide" />
             <TabItem to="/my-cases" label="My cases" icon="folders" motion="tilt" />
             <div className="flex flex-1 justify-center">

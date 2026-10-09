@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 /*
-  DetectiveLanka design system — single light theme.
+  DetectiveLanka design system - single light theme.
   Manila paper, warm ink, crimson "rubber stamp" brand. Flat "glass" controls: tinted translucent fills with a thin
-  light edge. No hover effects (touch-first), no blur filters, almost no shadows — built to stay smooth on phones.
+  light edge. No hover effects (touch-first), no blur filters, almost no shadows - built to stay smooth on phones.
 */
 @font-face {
   font-family: 'Bitter';
@@ -98,7 +98,7 @@ textarea, input, select, [contenteditable="true"], [data-selectable] { -webkit-u
 img, canvas, svg { -webkit-touch-callout: none; -webkit-user-drag: none; user-drag: none; }
 @media print { html { display: none !important; } }
 
-/* iOS Safari zooms the page when a focused field is under 16px — never allow that. */
+/* iOS Safari zooms the page when a focused field is under 16px - never allow that. */
 input, select, textarea { font-size: 16px; }
 
 /* hide scrollbars on phones/tablets (content still scrolls) */
@@ -264,7 +264,7 @@ input, select, textarea { font-size: 16px; }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-/* Tab buttons: no background — the icon hops and a tiny dot pops in under it when its tab becomes active */
+/* Tab buttons: no background - the icon hops and a tiny dot pops in under it when its tab becomes active */
 @keyframes tab-hop {
   0% { transform: translateY(3px) scale(0.78); }
   55% { transform: translateY(-3px) scale(1.14); }
@@ -275,7 +275,6 @@ input, select, textarea { font-size: 16px; }
   to { transform: scale(1); opacity: 1; }
 }
 .tab-icon { position: relative; display: grid; height: 2rem; width: 3.5rem; place-items: center; transition: transform 0.12s ease-out; }
-.tab-icon:active { transform: scale(0.86); }
 /* every nav button gets its own little motion (data-motion), played when it becomes active */
 @keyframes m-slide { 0% { transform: translateX(-7px); } 55% { transform: translateX(4px); } 100% { transform: none; } }
 @keyframes m-tilt { 0% { transform: rotate(-16deg) scale(0.85); } 55% { transform: rotate(11deg) scale(1.1); } 100% { transform: none; } }
@@ -297,7 +296,14 @@ input, select, textarea { font-size: 16px; }
 .mo-press svg { transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2); }
 .mo-press[data-motion='spin']:active svg { transform: rotate(140deg); }
 .mo-press[data-motion='ring']:active svg { transform: rotate(-24deg); transform-origin: 50% 12%; }
-.tab-icon.on::after { content: ''; position: absolute; bottom: -1px; left: 50%; height: 4px; width: 4px; margin-left: -2px; border-radius: 9999px; background: var(--color-brand-600); animation: tab-dot 0.3s 0.12s cubic-bezier(0.2, 0.9, 0.25, 1.4) backwards; }
+/* the active-tab marker glides (and stretches) along the top edge of the bar when you change tab */
+@keyframes worm-stretch { 0% { scale: 1 1; } 35% { scale: 2.4 1; } 100% { scale: 1 1; } }
+.tab-worm { position: absolute; top: -1px; left: 0; height: 3px; width: 28px; border-radius: 3px; background: var(--color-brand-600); opacity: 0; transition: transform 0.5s cubic-bezier(0.3, 1.35, 0.45, 1), opacity 0.2s; pointer-events: none; }
+.tab-worm.go { animation: worm-stretch 0.5s ease-out; }
+/* buttons squash when pressed and spring back with a little overshoot */
+.btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .chip, .tab-icon { transition: transform 0.42s cubic-bezier(0.3, 1.9, 0.5, 1); }
+.btn-primary:active, .btn-secondary:active, .btn-ghost:active, .btn-danger:active, .chip:active { transform: scale(0.94, 0.88); transition-duration: 0.07s; }
+.tab-icon:active { transform: scale(0.8, 0.7); transition-duration: 0.07s; }
 @keyframes pulse {
   50% { opacity: 0.55; }
 }
@@ -366,3 +372,7 @@ html[lang='si'] .leading-tight, html[lang='si'] .leading-snug, html[lang='si'] .
 
 html[lang='ta'] .tab-label { font-size: 0.58rem; letter-spacing: 0; }
 html[lang='si'] .tab-label { font-size: 0.62rem; }
+
+.poll-opt { transition: transform 0.42s cubic-bezier(0.3, 1.9, 0.5, 1); }
+.poll-opt:active { transform: scale(0.97, 0.92); transition-duration: 0.07s; }
+.poll-bar { transition: width 0.7s cubic-bezier(0.2, 0.9, 0.3, 1); }

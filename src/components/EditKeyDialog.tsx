@@ -37,7 +37,7 @@ export function EditKeyDialog({
   };
 
   const download = () => {
-    const blob = new Blob([`Detective Lanka — case key for your ${kind}\n\n${editKey}\n\nKeep this secret. Anyone with this key can edit or delete your ${kind}.\nIt cannot be recovered if lost.\n`], { type: 'text/plain' });
+    const blob = new Blob([`Detective Lanka | case key for your ${kind}\n\n${editKey}\n\nKeep this secret. Anyone with this key can edit or delete your ${kind}.\nIt cannot be recovered if lost.\n`], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -67,7 +67,7 @@ export function EditKeyDialog({
         </div>
         <p className="text-ink-soft">
           {savedLocally
-            ? t('A copy was also saved on this device only, so you can manage it from here. Clearing site data removes it — keep your own backup.')
+            ? t('A copy was also saved on this device only, so you can manage it from here. Clearing site data removes it, keep your own backup.')
             : t('We could not save a copy on this device (storage is blocked). Keep the key somewhere safe.')}
         </p>
         <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-black/5 p-3.5">

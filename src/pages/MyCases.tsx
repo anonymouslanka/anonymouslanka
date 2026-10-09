@@ -81,7 +81,7 @@ export default function MyCases() {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('My cases')}</h1>
-      <p className="mt-1.5 text-sm text-ink-soft">{t('Cases and statements filed from this device, with live progress. Their keys live only here — they cannot be recovered if you clear your browser data.')}</p>
+      <p className="mt-1.5 text-sm text-ink-soft">{t('Cases and statements filed from this device, with live progress. Their keys live only here, they cannot be recovered if you clear your browser data.')}</p>
 
       <div className="mt-6">
         {rows === null && <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-28 w-full !rounded-2xl" />)}</div>}
@@ -110,7 +110,7 @@ export default function MyCases() {
                     </>
                   ) : (
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-sm text-ink-soft">{caseNo(r.id)} — {r.problem}</p>
+                      <p className="text-sm text-ink-soft">{caseNo(r.id)}, {r.problem}</p>
                       <button className="btn-secondary" onClick={() => { storage.removePost(r.id); void load(); }}>{t('Remove from device')}</button>
                     </div>
                   )}
@@ -135,7 +135,7 @@ export default function MyCases() {
                     <span>{timeAgo(c.createdAt)}</span>
                   </span>
                   <span className="line-clamp-2 block text-sm">{c.content}</span>
-                  {c.status === 'PENDING' && <span className="mt-1 block text-xs text-amber-700">{t('Hidden after reports — a moderator is reviewing it.')}</span>}
+                  {c.status === 'PENDING' && <span className="mt-1 block text-xs text-amber-700">{t('Hidden after reports, a moderator is reviewing it.')}</span>}
                 </span>
                 <Icon name="chevronRight" size={20} className="mt-2 shrink-0 text-stone-400" />
               </Link>

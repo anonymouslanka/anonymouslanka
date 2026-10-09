@@ -3,7 +3,7 @@
  * no dragging images out, no copy / cut, no Save / Print / View-source shortcuts. Form fields and anything marked
  * data-selectable stay normal.
  *
- * This is NOT a security boundary — whatever a screen shows can still be screenshotted — so nothing sensitive depends
+ * This is NOT a security boundary, whatever a screen shows can still be screenshotted, so nothing sensitive depends
  * on it. The real protection is server-side (private documents, signed image URLs, moderation, rate limits).
  */
 const free = (target: EventTarget | null): boolean => target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"], [data-selectable]') !== null;

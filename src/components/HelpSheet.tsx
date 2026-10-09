@@ -4,7 +4,7 @@ import { Icon, IconName } from './Icon';
 import { Dialog } from './ui';
 
 const steps: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'folderPlus', title: 'Open a case', text: 'Describe what happened and add photos as exhibits. No name, email or phone number — ever.' },
+  { icon: 'folderPlus', title: 'Open a case', text: 'Describe what happened and add photos as exhibits. No name, email or phone number, ever.' },
   { icon: 'gavel', title: 'A moderator reviews it', text: 'Nothing is public until it is cleared. You can follow progress in My cases.' },
   { icon: 'chat', title: 'The public adds statements', text: 'Anyone can add statements with photos. Statements go live instantly; abusive ones are hidden after 10 reports.' },
   { icon: 'key', title: 'Your case key', text: 'You get a secret key instead of an account. It is shown once and kept only on your device.' },
@@ -17,7 +17,7 @@ export function HelpSheet({ open, onClose }: { open: boolean; onClose: () => voi
   return (
     <Dialog open={open} onClose={onClose} title={t('About Detective Lanka')} size="lg">
       <p className="text-sm text-ink-soft">
-        {t('An anonymous, moderated case-file app for Sri Lanka. Report crime, read cleared cases and add what you know — without creating an account or giving any personal details.')}
+        {t('An anonymous, moderated case-file app for Sri Lanka. Report crime, read cleared cases and add what you know, without creating an account or giving any personal details.')}
       </p>
       <ol className="mt-5 space-y-4">
         {steps.map((s, i) => (

@@ -39,7 +39,7 @@ interface Item {
 }
 
 /**
- * Local document selection (PDF, DOCX, XLSX, PPTX, TXT). Checks here are only a convenience — the backend validates
+ * Local document selection (PDF, DOCX, XLSX, PPTX, TXT). Checks here are only a convenience, the backend validates
  * the real file contents, removes author details and refuses macros.
  */
 export function FilePicker({
@@ -126,7 +126,7 @@ export function FilePicker({
       {hidden}
       <p className="mt-2.5 flex items-start gap-1.5 text-xs text-ink-soft">
         <Icon name="shieldCheck" size={14} className="mt-px shrink-0" />
-        {t('Up to {slots} · PDF, DOCX, XLSX, PPTX or TXT · {mb} MB each. Author details inside the file are removed, but the file name is public — don’t put real names in it.', { slots, mb: MAX_FILE_MB })}
+        {t('Up to {slots} · PDF, DOCX, XLSX, PPTX or TXT · {mb} MB each. Author details inside the file are removed, but the file name is public, don’t put real names in it.', { slots, mb: MAX_FILE_MB })}
       </p>
     </div>
   );

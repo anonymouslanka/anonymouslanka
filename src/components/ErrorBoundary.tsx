@@ -9,7 +9,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { failed: 
     return { failed: true };
   }
   componentDidCatch(): void {
-    /* nothing is logged or sent anywhere — the app collects no data about its users */
+    /* nothing is logged or sent anywhere, the app collects no data about its users */
   }
   render() {
     if (!this.state.failed) return this.props.children;

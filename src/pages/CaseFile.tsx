@@ -10,6 +10,7 @@ import { api, ApiError, deviceStore } from '../lib/api';
 import { viewerItems } from '../lib/files';
 import { haptics } from '../lib/haptics';
 import { useT } from '../lib/i18n';
+import { PunishmentPoll } from '../components/PunishmentPoll';
 import { useAsync } from '../lib/hooks';
 import { storage } from '../lib/storage';
 import { caseNo, cx, formatDate, usePageMeta } from '../lib/util';
@@ -130,7 +131,7 @@ export default function CaseFile() {
       storage.markReported(`case-${post.id}`);
       setReported(true);
       setReporting(false);
-      toast('success', r.hidden ? t('Thanks — this case was hidden and sent to a moderator.') : t('Thanks — your report was recorded.'));
+      toast('success', r.hidden ? t('Thanks, this case was hidden and sent to a moderator.') : t('Thanks, your report was recorded.'));
       if (r.hidden) reload();
     } catch (e) {
       haptics.error();
@@ -210,6 +211,8 @@ export default function CaseFile() {
         <Icon name="scale" size={20} className="mt-0.5 shrink-0" />
         <p><strong>{t('Notice.')}</strong> {t('This is an anonymous, public-submitted case file that was reviewed by a moderator but not independently verified. If you believe it contains an error or private information, file a statement or report the case.')} {t('In an emergency call')} <strong>119</strong>.</p>
       </div>
+
+      <PunishmentPoll postId={post.id} />
 
       <Statements postId={post.id} composerOpen={composer} setComposerOpen={setComposer} />
 

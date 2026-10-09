@@ -35,7 +35,7 @@ export function timeAgo(iso: string | null | undefined): string {
 export function usePageMeta(opts: { title?: string; description?: string; image?: string; path?: string; noindex?: boolean }): void {
   const { title, description, image, path, noindex } = opts;
   useEffect(() => {
-    const fullTitle = title ? `${title} · Detective Lanka` : 'Detective Lanka — Report Crime Anonymously in Sri Lanka | Anonymous Case Files';
+    const fullTitle = title ? `${title} · Detective Lanka` : 'Detective Lanka | Report Crime Anonymously in Sri Lanka | Anonymous Case Files';
     document.title = fullTitle;
     const set = (attr: 'name' | 'property', key: string, value: string | undefined) => {
       let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);

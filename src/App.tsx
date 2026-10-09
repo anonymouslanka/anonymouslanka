@@ -37,7 +37,7 @@ export default function App() {
                   <Route index element={<Home />} />
                   <Route path="case/:id" element={<CaseFile />} />
                   <Route path="open-case" element={<OpenCase />} />
-                  {/* Only the public case id is in the URL — the case key is read from this device's storage. */}
+                  {/* Only the public case id is in the URL, the case key is read from this device's storage. */}
                   <Route path="edit/:id" element={<EditCase />} />
                   <Route path="my-cases" element={<MyCases />} />
                   <Route path="about" element={<About />} />

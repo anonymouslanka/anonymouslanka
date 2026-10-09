@@ -111,7 +111,7 @@ export default function Notifications() {
           <Icon name="settings" size={21} />
         </Link>
       </div>
-      <p className="mt-1.5 text-sm text-ink-soft">{t('New case files, announcements and statements on cases you follow. Phone alerts are optional — everything also shows up here.')}</p>
+      <p className="mt-1.5 text-sm text-ink-soft">{t('New case files, announcements and statements on cases you follow. Phone alerts are optional, everything also shows up here.')}</p>
 
       {!online && <p role="status" className="mt-4 flex items-center gap-2 rounded-xl bg-black/5 px-3.5 py-2.5 text-sm text-ink-soft"><Icon name="offline" size={16} /> {t('You are offline.')}</p>}
       {saved && <p role="status" className="mt-3 flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900"><Icon name="clock" size={16} /> {t('Showing the notifications saved on this device.')}</p>}

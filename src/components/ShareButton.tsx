@@ -3,7 +3,7 @@ import { useT } from '../lib/i18n';
 import { Icon } from './Icon';
 import { Dialog, useToast } from './ui';
 
-/** Shares only the public case URL (`/case/<publicId>`) — never keys or tokens. */
+/** Shares only the public case URL (`/case/<publicId>`), never keys or tokens. */
 export function ShareButton({ postId, title, excerpt }: { postId: string; title: string; excerpt?: string }) {
   const [open, setOpen] = useState(false);
   const toast = useToast();

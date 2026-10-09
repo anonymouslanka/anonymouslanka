@@ -133,14 +133,14 @@ export default function Status() {
           </span>
           <h2 className="font-display text-xl font-bold">{headline}</h2>
         </div>
-        {last && last.ms > 4000 && !down && <p className="mt-2 text-sm">The server was asleep and has just woken up — the first request after a quiet period is slow. This is normal.</p>}
+        {last && last.ms > 4000 && !down && <p className="mt-2 text-sm">The server was asleep and has just woken up, the first request after a quiet period is slow. This is normal.</p>}
         <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <div><dt className="font-mono text-[0.64rem] tracking-[0.14em] uppercase opacity-70">Response</dt><dd className="mt-0.5 text-lg font-bold">{last ? `${last.ms} ms` : '—'}</dd></div>
-          <div><dt className="font-mono text-[0.64rem] tracking-[0.14em] uppercase opacity-70">Uptime</dt><dd className="mt-0.5 text-lg font-bold">{status ? human(status.uptimeSeconds) : '—'}</dd></div>
-          <div className="col-span-2"><dt className="font-mono text-[0.64rem] tracking-[0.14em] uppercase opacity-70">Service</dt><dd className="mt-0.5 truncate text-lg font-bold">{status?.service ?? '—'}</dd></div>
+          <div><dt className="font-mono text-[0.64rem] tracking-[0.14em] uppercase opacity-70">Response</dt><dd className="mt-0.5 text-lg font-bold">{last ? `${last.ms} ms` : '-'}</dd></div>
+          <div><dt className="font-mono text-[0.64rem] tracking-[0.14em] uppercase opacity-70">Uptime</dt><dd className="mt-0.5 text-lg font-bold">{status ? human(status.uptimeSeconds) : '-'}</dd></div>
+          <div className="col-span-2"><dt className="font-mono text-[0.64rem] tracking-[0.14em] uppercase opacity-70">Service</dt><dd className="mt-0.5 truncate text-lg font-bold">{status?.service ?? '-'}</dd></div>
         </dl>
         <p className="mt-4 text-xs opacity-80">
-          Server time {status ? new Date(status.timestamp).toLocaleTimeString() : '—'} · last checked {last ? new Date(last.t).toLocaleTimeString() : '—'}
+          Server time {status ? new Date(status.timestamp).toLocaleTimeString() : '-'} · last checked {last ? new Date(last.t).toLocaleTimeString() : '-'}
         </p>
       </section>
 

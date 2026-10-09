@@ -71,7 +71,7 @@ export const haptics = {
   success: () => fire(26, 1, 110, true),
   /** Needs attention (confirm a destructive action). */
   warning: () => fire(18),
-  /** Failure: two sudden sharp taps in a row — a crack, not a buzz. */
+  /** Failure: two sudden sharp taps in a row, a crack, not a buzz. */
   error: () => fire([22, 55, 22], 2, 75, true),
 };
 

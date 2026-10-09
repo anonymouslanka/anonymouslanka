@@ -1,6 +1,6 @@
 # DetectiveLanka
 
-An installable, account-free **case-file app** for reporting crime in Sri Lanka. People *open a case* anonymously; it waits in **review** until a moderator clears it, and only cleared (**Open**) cases are public. Anyone can add **statements** (comments) — with optional photo **exhibits** — which are moderated the same way.
+An installable, account-free **case-file app** for reporting crime in Sri Lanka. People *open a case* anonymously; it waits in **review** until a moderator clears it, and only cleared (**Open**) cases are public. Anyone can add **statements** (comments) - with optional photo **exhibits** - which are moderated the same way.
 
 ```
 /public   React + TS + Vite + Tailwind   → Vercel   (the DetectiveLanka app / PWA)
@@ -29,7 +29,7 @@ Neither frontend ever talks to PostgreSQL, Redis or Cloudinary. They only call `
 |---|---|
 | Accounts | None. No email, phone, username, social login. |
 | Edit keys | Each **post** and each **comment** gets its own 256-bit random key (`crypto.randomBytes`). Shown **once**. The server stores only `HMAC-SHA256(key, SESSION_SECRET)`. No recovery. |
-| Where the key lives | The user's own browser `localStorage` (`app:post-edit:<postId>`, `app:comment-edit:<commentId>`). Sent only in the `X-Edit-Key` **header** — never URLs, query strings, route params, titles, logs, Redis or Cloudinary. |
+| Where the key lives | The user's own browser `localStorage` (`app:post-edit:<postId>`, `app:comment-edit:<commentId>`). Sent only in the `X-Edit-Key` **header** - never URLs, query strings, route params, titles, logs, Redis or Cloudinary. |
 | Isolation | A post key never works on a comment (or another post) and vice-versa. |
 | Edits | Editing a post/comment sends it back to `PENDING` (re-moderated). Edit window: `EDIT_WINDOW_DAYS` (default 180) → then `EDIT_KEY_EXPIRED`. |
 | Images (cases and statements) | Decoded & validated server-side (magic bytes, not MIME), dimension/pixel limits, auto-oriented, **re-encoded to WebP (drops EXIF/GPS/XMP)**, uploaded under a random public id (original filename never used). |
@@ -99,7 +99,7 @@ Generate secrets: `node -e "console.log(require('crypto').randomBytes(48).toStri
 
 ### `/public/.env` and `/admin/.env`
 
-Only `VITE_API_URL` (e.g. `https://anonymous-lanka-api.onrender.com/api/v1`). It is public by nature — **never** put secrets in `VITE_*` variables.
+Only `VITE_API_URL` (e.g. `https://anonymous-lanka-api.onrender.com/api/v1`). It is public by nature - **never** put secrets in `VITE_*` variables.
 
 ## Database (Supabase + Prisma)
 
@@ -142,12 +142,12 @@ All responses are `{ data, meta? }` or `{ error: { statusCode, code, message, de
 Create project → note pooled + direct connection strings (see above). Run migrations from your machine (or in the Render build command, below).
 
 ### 2. Render (backend)
-Option A — Blueprint: *New → Blueprint* → select the repo (uses [`render.yaml`](render.yaml)).
-Option B — manual *Web Service*: Root Directory `backend`, Build `npm ci --include=dev && npm run build && npx prisma migrate deploy`, Start `node dist/main.js`, Health Check Path `/api/v1/health`, env `NODE_VERSION=22`, `NODE_ENV=production`.
+Option A - Blueprint: *New → Blueprint* → select the repo (uses [`render.yaml`](render.yaml)).
+Option B - manual *Web Service*: Root Directory `backend`, Build `npm ci --include=dev && npm run build && npx prisma migrate deploy`, Start `node dist/main.js`, Health Check Path `/api/v1/health`, env `NODE_VERSION=22`, `NODE_ENV=production`.
 Set every variable from the backend table in the Render dashboard (`sync: false` in the blueprint means you enter them manually). Set `CORS_ORIGINS` to the two Vercel URLs. First deploy, then run `npx prisma db seed` (Render shell) or `npm run prisma:seed` once from your machine against the production `DIRECT_URL`.
 
 ### 3. Vercel (public app)
-*Add New Project* → import repo → **Root Directory `public`** → Framework: Vite. Env: `VITE_API_URL=https://<render-service>.onrender.com/api/v1`. `public/vercel.json` adds the SPA fallback, security headers, `no-cache` for `/sw.js` and the right content type for the manifest. **Vercel Hobby only builds commits whose author is the account owner** — commit with the owner's GitHub no-reply identity.
+*Add New Project* → import repo → **Root Directory `public`** → Framework: Vite. Env: `VITE_API_URL=https://<render-service>.onrender.com/api/v1`. `public/vercel.json` adds the SPA fallback, security headers, `no-cache` for `/sw.js` and the right content type for the manifest. **Vercel Hobby only builds commits whose author is the account owner** - commit with the owner's GitHub no-reply identity.
 
 ### 4. Vercel (admin)
 Same, **Root Directory `admin`**, same `VITE_API_URL`. `admin/vercel.json` adds `X-Robots-Tag: noindex` and `no-store`. Consider adding Vercel *Deployment Protection* or an IP allowlist on top.
@@ -166,6 +166,6 @@ Same, **Root Directory `admin`**, same `VITE_API_URL`. `admin/vercel.json` adds 
 * Headers: Helmet (HSTS, nosniff, no-referrer…), CSP-free JSON API, `x-powered-by` removed, gzip, 100 kB JSON body limit, strict multipart limits (count/size/fields), memory storage (nothing on disk).
 * Rate limits (per IP, in process memory, never logged/persisted): global 120/min, create post 5/h, comment 10/h, edit-key lookups 30/min, edits 10/h, admin login 5/15 min. With >1 backend instance, move the throttler store to Redis.
 * SEO: titles/OG/Twitter tags are set client-side (SPA). Link-preview bots that don't run JS will see the default site tags. For rich per-post previews add a prerender/edge function.
-* Moderation is the defence against defamation/doxxing — nothing is public without review; admins can redact text before approving.
+* Moderation is the defence against defamation/doxxing - nothing is public without review; admins can redact text before approving.
 * `npm audit` reports a high advisory in `deepmerge-ts` inside the Prisma **CLI** (build tool); it only processes our own schema and does not run in production request paths.
 * Image content (faces, signs, uniforms) can still identify people; moderators should review images.

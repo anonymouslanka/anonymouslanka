@@ -4,7 +4,7 @@ import { cx } from './util';
 
 /**
  * Framer Motion is loaded lazily (domAnimation only) and used for the few things CSS can't do well:
- * enter/exit of toasts, install/update bars. Lists, pages and press states are plain CSS — transform/opacity only.
+ * enter/exit of toasts, install/update bars. Lists, pages and press states are plain CSS, transform/opacity only.
  */
 const features = () => import('./motionFeatures').then((m) => m.default);
 export function MotionProvider({ children }: { children: ReactNode }) {

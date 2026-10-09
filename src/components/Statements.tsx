@@ -178,7 +178,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
       const r = await api.reportComment(id);
       storage.markReported(id);
       setReported((s) => new Set(s).add(id));
-      toast('success', r.hidden ? t('Thanks — this statement was hidden and sent to a moderator.') : t('Thanks — your report was recorded.'));
+      toast('success', r.hidden ? t('Thanks, this statement was hidden and sent to a moderator.') : t('Thanks, your report was recorded.'));
       setToReport(null);
       if (r.hidden) await load();
     } catch (err) {

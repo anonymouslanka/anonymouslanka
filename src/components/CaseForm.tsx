@@ -100,7 +100,7 @@ export function CaseForm({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      toast('error', tr('You are offline. Your draft is saved on this device — try again when you are back online.'));
+      toast('error', tr('You are offline. Your draft is saved on this device, try again when you are back online.'));
       return;
     }
     const fd = new FormData();
@@ -130,7 +130,7 @@ export function CaseForm({
       {!edit && (
         <div className="flex items-start gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
           <Icon name="shieldCheck" size={22} className="mt-0.5 shrink-0" />
-          <p><strong>{tr('No personal information needed.')}</strong> {tr('No name, email or phone number — ever. You get a secret case key instead of an account, and photo location data is stripped automatically.')}</p>
+          <p><strong>{tr('No personal information needed.')}</strong> {tr('No name, email or phone number, ever. You get a secret case key instead of an account, and photo location data is stripped automatically.')}</p>
         </div>
       )}
       {draft.current && !edit && (

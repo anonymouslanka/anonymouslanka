@@ -14,8 +14,7 @@ interface Item {
 }
 
 /**
- * Local exhibit selection with previews. Validation here is only a convenience —
- * the backend re-validates by decoding the bytes and strips all EXIF/GPS metadata.
+ * Local exhibit selection with previews. Validation here is only a convenience, * the backend re-validates by decoding the bytes and strips all EXIF/GPS metadata.
  * `compact` renders a slim attach button (used for statements).
  */
 export function ImagePicker({
