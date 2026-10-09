@@ -1,4 +1,5 @@
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { IoLanguage } from 'react-icons/io5';
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import { resyncPush, UnreadCtx, useUnreadProvider } from '../lib/notify';
@@ -162,7 +163,7 @@ export function Layout() {
           </button>
         )}
         <button className="btn-secondary mt-3 w-full" onClick={() => setLangOpen(true)}>
-          <Icon name="globe" size={18} /> {t('Language')} · <span lang={lang}>{lang === 'en' ? 'English' : lang === 'si' ? 'සිංහල' : 'தமிழ்'}</span>
+          <IoLanguage size={19} aria-hidden="true" /> {t('Language')} · <span lang={lang}>{lang === 'en' ? 'English' : lang === 'si' ? 'සිංහල' : 'தமிழ்'}</span>
         </button>
         <div className="mt-auto space-y-2 rounded-2xl bg-folder/45 p-4 text-xs text-ink-soft">
           <p className="flex items-center gap-2 font-bold text-ink"><Icon name="lock" size={14} /> {t('No name. No email. No phone.')}</p>
@@ -183,7 +184,7 @@ export function Layout() {
           )}
           <div className="flex items-center">
           <button onClick={() => setLangOpen(true)} className="chrome mo mo-press grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" data-motion="spin" aria-label={t('Language')}>
-            <Icon name="globe" size={23} />
+            <IoLanguage size={25} aria-hidden="true" />
           </button>
           <Link to="/notifications" data-motion="ring" className="chrome mo mo-press relative grid h-11 w-11 place-items-center rounded-full text-ink-soft active:bg-black/5" aria-label={unread.count > 0 ? t('Notifications, {n} unread', { n: unread.count }) : t('Notifications')}>
             <Icon name="bell" size={24} />
