@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useT } from '../lib/i18n';
 import { Icon } from './Icon';
 import { Dialog } from './ui';
 
@@ -141,24 +142,26 @@ export function PwaProvider({ children }: { children: ReactNode }) {
 
 /** Slim status strip shown when the device is offline. */
 export function OfflineBar() {
+  const t = useT();
   const { online } = usePwa();
   if (online) return null;
   return (
     <div role="status" className="bg-ink px-4 py-2 text-center text-xs font-semibold text-white">
-      <span className="inline-flex items-center gap-2"><Icon name="offline" size={14} /> You are offline — showing saved case files where available.</span>
+      <span className="inline-flex items-center gap-2"><Icon name="offline" size={14} /> {t('You are offline — showing saved case files where available.')}</span>
     </div>
   );
 }
 
 /** Bar offering to reload when a new version of the app has been downloaded. */
 export function UpdateToast() {
+  const t = useT();
   const { updateReady, applyUpdate } = usePwa();
   if (!updateReady) return null;
   return (
     <div className="toast-in fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[70] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-sm text-white lg:bottom-6">
-      <span>A new version is ready.</span>
+      <span>{t('A new version is ready.')}</span>
       <button className="rounded-xl bg-white/15 px-4 py-2 font-bold active:bg-white/25" onClick={applyUpdate}>
-        Update
+        {t('Update')}
       </button>
     </div>
   );
@@ -166,6 +169,7 @@ export function UpdateToast() {
 
 /** Dismissible install card (home screen). Hidden once installed or dismissed. */
 export function InstallCard() {
+  const t = useT();
   const { installable, install, isIOS, canInstall } = usePwa();
   const [dismissed, setDismissed] = useState(() => {
     try {
@@ -189,13 +193,13 @@ export function InstallCard() {
         <Icon name="download" size={20} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-bold">Install Detective Lanka</p>
-        <p className="text-xs text-ink-soft">Full-screen app, works offline.</p>
+        <p className="text-sm font-bold">{t('Install Detective Lanka')}</p>
+        <p className="text-xs text-ink-soft">{t('Full-screen app, works offline.')}</p>
       </div>
       <button className="btn-primary !min-h-10 !px-4" onClick={install}>
-        Install
+        {t('Install')}
       </button>
-      <button className="btn-ghost !min-h-10 !px-2.5" aria-label="Dismiss" onClick={hide}>
+      <button className="btn-ghost !min-h-10 !px-2.5" aria-label={t('Dismiss')} onClick={hide}>
         <Icon name="x" size={16} />
       </button>
     </div>
@@ -203,31 +207,32 @@ export function InstallCard() {
 }
 
 function IOSInstallSheet() {
+  const t = useT();
   const { showIOSHelp, setShowIOSHelp } = usePwa();
   return (
-    <Dialog open={showIOSHelp} onClose={() => setShowIOSHelp(false)} title="Install on iPhone or iPad">
+    <Dialog open={showIOSHelp} onClose={() => setShowIOSHelp(false)} title={t('Install on iPhone or iPad')}>
       <ol className="space-y-4 text-sm text-ink">
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-white">1</span>
           <span>
-            Open this page in <strong>Safari</strong>, then tap the <strong>Share</strong> button <Icon name="share" size={16} className="-mt-1 inline" /> in the toolbar.
+            {t('Open this page in')} <strong>Safari</strong>, {t('then tap the')} <strong>{t('Share')}</strong> {t('button')} <Icon name="share" size={16} className="-mt-1 inline" /> {t('in the toolbar.')}
           </span>
         </li>
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-white">2</span>
           <span>
-            Scroll down and choose <strong>Add to Home Screen</strong> <Icon name="plus" size={16} className="-mt-1 inline" />.
+            {t('Scroll down and choose')} <strong>{t('Add to Home Screen')}</strong> <Icon name="plus" size={16} className="-mt-1 inline" />.
           </span>
         </li>
         <li className="flex gap-3">
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-white">3</span>
           <span>
-            Tap <strong>Add</strong>. Detective Lanka opens full-screen from your home screen, like any other app.
+            {t('Tap')} <strong>{t('Add')}</strong>. {t('Detective Lanka opens full-screen from your home screen, like any other app.')}
           </span>
         </li>
       </ol>
       <button className="btn-primary mt-6 w-full" onClick={() => setShowIOSHelp(false)}>
-        Got it
+        {t('Got it')}
       </button>
     </Dialog>
   );

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { fmtBytes, KIND_LABEL, ViewerItem } from '../lib/files';
 import { haptics } from '../lib/haptics';
+import { useT } from '../lib/i18n';
 import { cx } from '../lib/util';
 import { Icon } from './Icon';
 import { Spinner } from './ui';
@@ -31,6 +32,7 @@ function ImageSlide({ item }: { item: Extract<ViewerItem, { kind: 'image' }> }) 
 }
 
 function TextSlide({ item }: { item: FileItem }) {
+  const t = useT();
   const [text, setText] = useState<string | null>(null);
   const [bad, setBad] = useState(false);
   useEffect(() => {
@@ -44,7 +46,7 @@ function TextSlide({ item }: { item: FileItem }) {
     };
   }, [item.url]);
   if (bad) return <Unavailable item={item} />;
-  if (text === null) return <Center><Spinner /> Loading…</Center>;
+  if (text === null) return <Center><Spinner /> {t('Loading…')}</Center>;
   return <pre className="h-full overflow-auto overscroll-contain bg-neutral-900 p-4 font-code text-[0.82rem] leading-relaxed break-words whitespace-pre-wrap text-white/90" data-selectable>{text}</pre>;
 }
 
@@ -52,26 +54,28 @@ const Center = ({ children }: { children: React.ReactNode }) => <div className="
 
 /** Word / Excel / PowerPoint cannot be drawn safely inside the app, and files are not offered for download. */
 function Unavailable({ item, note }: { item: FileItem; note?: string }) {
+  const t = useT();
   return (
     <div className="grid h-full place-items-center px-6">
       <div className="w-full max-w-sm rounded-3xl bg-white/10 p-6 text-center text-white">
         <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-white/15"><Icon name="file" size={32} /></span>
         <p className="mt-4 font-display text-lg font-bold break-words">{item.name}.{item.ext}</p>
-        <p className="mt-1 text-sm text-white/70">{KIND_LABEL[item.ext] ?? 'Document'} · {fmtBytes(item.bytes)}</p>
-        <p className="mt-3 text-xs text-white/70">{note ?? 'This file type cannot be previewed in the app. Moderators have reviewed it.'}</p>
+        <p className="mt-1 text-sm text-white/70">{t(KIND_LABEL[item.ext] ?? 'Document')} · {fmtBytes(item.bytes)}</p>
+        <p className="mt-3 text-xs text-white/70">{note ?? t('This file type cannot be previewed in the app. Moderators have reviewed it.')}</p>
       </div>
     </div>
   );
 }
 
 function Slide({ item }: { item: ViewerItem }) {
+  const t = useT();
   const [pdfFailed, setPdfFailed] = useState(false);
   const fail = useCallback(() => setPdfFailed(true), []);
   if (item.kind === 'image') return <ImageSlide item={item} />;
   if (item.ext === 'pdf') {
-    if (pdfFailed) return <Unavailable item={item} note="This PDF could not be shown here. Please try again later." />;
+    if (pdfFailed) return <Unavailable item={item} note={t('This PDF could not be shown here. Please try again later.')} />;
     return (
-      <Suspense fallback={<Center><Spinner /> Opening document…</Center>}>
+      <Suspense fallback={<Center><Spinner /> {t('Opening document…')}</Center>}>
         <PdfView url={item.url} onFail={fail} />
       </Suspense>
     );
@@ -89,6 +93,7 @@ export function Viewer({ items, index, onIndex, onClose }: { items: ViewerItem[]
   const track = useRef<HTMLDivElement>(null);
   const settle = useRef<number>(0);
   const current = index ?? 0;
+  const t = useT();
 
   // Jump (no animation) on open; animate when the index changes from the arrows / keys.
   const first = useRef(true);
@@ -138,13 +143,13 @@ export function Viewer({ items, index, onIndex, onClose }: { items: ViewerItem[]
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="Exhibit viewer" className="page-in fixed inset-0 z-[95] flex flex-col bg-black pt-safe pb-safe">
+    <div role="dialog" aria-modal="true" aria-label={t('Exhibit viewer')} className="page-in fixed inset-0 z-[95] flex flex-col bg-black pt-safe pb-safe">
       <div className="flex items-center gap-2 px-3 py-2 text-white">
         <div className="min-w-0 flex-1">
           <p className="truncate font-mono text-xs tracking-[0.14em] uppercase">{item.label}</p>
-          <p className="text-[0.7rem] text-white/60">{index + 1} of {items.length}{item.kind === 'file' ? ` · ${KIND_LABEL[item.ext] ?? 'Document'}` : ''}</p>
+          <p className="text-[0.7rem] text-white/60">{t('{n} of {total}', { n: index + 1, total: items.length })}{item.kind === 'file' ? ` · ${t(KIND_LABEL[item.ext] ?? 'Document')}` : ''}</p>
         </div>
-        <button className="grid h-11 w-11 place-items-center rounded-full bg-white/15 active:bg-white/30" onClick={onClose} aria-label="Close viewer"><Icon name="x" size={22} /></button>
+        <button className="grid h-11 w-11 place-items-center rounded-full bg-white/15 active:bg-white/30" onClick={onClose} aria-label={t('Close viewer')}><Icon name="x" size={22} /></button>
       </div>
 
       <div className="relative min-h-0 flex-1">
@@ -156,10 +161,10 @@ export function Viewer({ items, index, onIndex, onClose }: { items: ViewerItem[]
           ))}
         </div>
         {items.length > 1 && index > 0 && (
-          <button className="absolute top-1/2 left-2 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/20 text-white active:bg-white/35 sm:grid" onClick={() => go(-1)} aria-label="Previous file"><Icon name="chevronLeft" size={24} /></button>
+          <button className="absolute top-1/2 left-2 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/20 text-white active:bg-white/35 sm:grid" onClick={() => go(-1)} aria-label={t('Previous file')}><Icon name="chevronLeft" size={24} /></button>
         )}
         {items.length > 1 && index < items.length - 1 && (
-          <button className="absolute top-1/2 right-2 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/20 text-white active:bg-white/35 sm:grid" onClick={() => go(1)} aria-label="Next file"><Icon name="chevronRight" size={24} /></button>
+          <button className="absolute top-1/2 right-2 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/20 text-white active:bg-white/35 sm:grid" onClick={() => go(1)} aria-label={t('Next file')}><Icon name="chevronRight" size={24} /></button>
         )}
       </div>
 

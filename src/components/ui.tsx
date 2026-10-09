@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { haptics } from '../lib/haptics';
+import { useT } from '../lib/i18n';
 import type { ModerationStatus } from '../lib/types';
 import { cx } from '../lib/util';
 import { Icon, IconName } from './Icon';
@@ -29,6 +30,7 @@ const toastTone: Record<ToastKind, { title: string; card: string; bubble: string
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const t = useT();
   const [items, setItems] = useState<ToastItem[]>([]);
   const counter = useRef(0);
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
@@ -65,21 +67,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastCtx.Provider value={push}>
       {children}
       <div className="pointer-events-none fixed inset-x-0 top-0 z-[80] flex flex-col items-center gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] lg:inset-x-auto lg:right-0 lg:bottom-0 lg:top-auto lg:items-end lg:p-5">
-        {items.map((t) => {
-          const tone = toastTone[t.kind];
+        {items.map((item) => {
+          const tone = toastTone[item.kind];
           return (
-            <div key={t.id} role={t.kind === 'error' ? 'alert' : 'status'} className={cx('toast-in pointer-events-auto relative flex w-full max-w-sm items-start gap-3 overflow-hidden rounded-2xl border py-3 pr-2 pl-3.5', tone.card)}>
+            <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className={cx('toast-in pointer-events-auto relative flex w-full max-w-sm items-start gap-3 overflow-hidden rounded-2xl border py-3 pr-2 pl-3.5', tone.card)}>
               <span className={cx('mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full', tone.bubble, tone.motion)}>
                 <Icon name={tone.glyph} size={17} strokeWidth={2.8} />
               </span>
               <div className={cx('min-w-0 flex-1 pt-0.5', tone.text)}>
-                <p className="text-[0.95rem] leading-tight font-bold">{tone.title}</p>
-                <p className="mt-0.5 text-sm leading-snug break-words opacity-90">{t.message}</p>
+                <p className="text-[0.95rem] leading-tight font-bold">{t(tone.title)}</p>
+                <p className="mt-0.5 text-sm leading-snug break-words opacity-90">{item.message}</p>
               </div>
-              <button type="button" onClick={() => dismiss(t.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-black/45 active:bg-black/10" aria-label="Dismiss notification" data-no-haptic>
+              <button type="button" onClick={() => dismiss(item.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-black/45 active:bg-black/10" aria-label={t('Dismiss notification')} data-no-haptic>
                 <Icon name="x" size={16} strokeWidth={2.6} />
               </button>
-              <span className={cx('toast-bar absolute inset-x-0 bottom-0 h-1 origin-left', tone.bar)} style={{ animationDuration: `${t.ms}ms` }} aria-hidden="true" />
+              <span className={cx('toast-bar absolute inset-x-0 bottom-0 h-1 origin-left', tone.bar)} style={{ animationDuration: `${item.ms}ms` }} aria-hidden="true" />
             </div>
           );
         })}
@@ -104,6 +106,7 @@ export function Dialog({
   dismissable?: boolean;
   size?: 'md' | 'lg' | 'xl';
 }) {
+  const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -139,7 +142,7 @@ export function Dialog({
               {title}
             </h2>
             {dismissable && (
-              <button type="button" onClick={onClose} aria-label="Close" className="btn-ghost -mt-1 -mr-2 !min-h-10 !px-3">
+              <button type="button" onClick={onClose} aria-label={t('Close')} className="btn-ghost -mt-1 -mr-2 !min-h-10 !px-3">
                 <Icon name="x" size={18} />
               </button>
             )}
@@ -170,16 +173,17 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <Dialog open={open} onClose={onClose} title={title}>
       <div className="text-sm text-ink-soft">{message}</div>
       <div className="mt-6 grid grid-cols-2 gap-2">
         <button className="btn-secondary" onClick={onClose} disabled={busy}>
-          Cancel
+          {t('Cancel')}
         </button>
         <button className={danger ? 'btn-danger' : 'btn-primary'} onClick={onConfirm} disabled={busy}>
           {busy && <Spinner />}
-          {busy ? 'Working…' : confirmLabel}
+          {busy ? t('Working…') : confirmLabel}
         </button>
       </div>
     </Dialog>
@@ -228,16 +232,17 @@ export function EmptyState({ title, message, action, icon = 'folder' }: { title:
 }
 
 export function ErrorState({ message, onRetry, title = 'Something went wrong' }: { message: string; onRetry?: () => void; title?: string }) {
+  const t = useT();
   return (
     <div role="alert" className="card page-in flex flex-col items-center border-red-200 px-6 py-12 text-center">
       <div className="mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-red-50 text-red-600" aria-hidden="true">
         <Icon name="alert" size={30} />
       </div>
-      <h3 className="font-display text-lg font-bold">{title}</h3>
+      <h3 className="font-display text-lg font-bold">{t(title)}</h3>
       <p className="mt-1 max-w-md text-sm text-ink-soft">{message}</p>
       {onRetry && (
         <button className="btn-secondary mt-5" onClick={onRetry}>
-          <Icon name="refresh" size={18} /> Try again
+          <Icon name="refresh" size={18} /> {t('Try again')}
         </button>
       )}
     </div>
@@ -251,8 +256,9 @@ export function StatusBadge({ status }: { status: ModerationStatus }) {
     APPROVED: ['Open', 'border-emerald-600/70 text-emerald-700 bg-emerald-50'],
     REJECTED: ['Dismissed', 'border-red-600/70 text-red-700 bg-red-50'],
   };
+  const t = useT();
   const [label, tone] = map[status];
-  return <span className={cx('stamp', tone)}>{label}</span>;
+  return <span className={cx('stamp', tone)}>{t(label)}</span>;
 }
 
 export function FieldError({ messages }: { messages?: string[] }) {

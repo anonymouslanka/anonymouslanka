@@ -27,10 +27,27 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Noto Sans Sinhala';
+  src: url('/fonts/noto-sans-sinhala-wght.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0964-0965, U+0D81-0DF4, U+200C-200D, U+25CC;
+}
+@font-face {
+  font-family: 'Noto Sans Tamil';
+  src: url('/fonts/noto-sans-tamil-wght.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;
+}
+
 @theme {
   --font-sans: 'Public Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans Sinhala', 'Noto Sans Tamil', sans-serif;
-  --font-display: 'Bitter', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-  --font-mono: 'Special Elite', 'Courier New', ui-monospace, monospace;
+  --font-display: 'Bitter', 'Noto Sans Sinhala', 'Noto Sans Tamil', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-mono: 'Special Elite', 'Noto Sans Sinhala', 'Noto Sans Tamil', 'Courier New', ui-monospace, monospace;
   --font-code: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
 
   --color-paper: #f4efe3;
@@ -247,6 +264,20 @@ input, select, textarea { font-size: 16px; }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
+/* Tab buttons: no background — the icon hops and a tiny dot pops in under it when its tab becomes active */
+@keyframes tab-hop {
+  0% { transform: translateY(3px) scale(0.78); }
+  55% { transform: translateY(-3px) scale(1.14); }
+  100% { transform: none; }
+}
+@keyframes tab-dot {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.tab-icon { position: relative; display: grid; height: 2rem; width: 3.5rem; place-items: center; transition: transform 0.12s ease-out; }
+.tab-icon:active { transform: scale(0.86); }
+.tab-icon.on svg { animation: tab-hop 0.4s cubic-bezier(0.2, 0.9, 0.25, 1.15) backwards; }
+.tab-icon.on::after { content: ''; position: absolute; bottom: -1px; left: 50%; height: 4px; width: 4px; margin-left: -2px; border-radius: 9999px; background: var(--color-brand-600); animation: tab-dot 0.3s 0.12s cubic-bezier(0.2, 0.9, 0.25, 1.4) backwards; }
 @keyframes pulse {
   50% { opacity: 0.55; }
 }
@@ -307,3 +338,11 @@ dialog[open]::backdrop { animation: page-in 0.2s ease-out both; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Sinhala and Tamil: never spread letters apart (it breaks the joined shapes) and give the marks room */
+html[lang='si'] *, html[lang='ta'] * { letter-spacing: normal !important; }
+html[lang='si'] body, html[lang='ta'] body { line-height: 1.6; }
+html[lang='si'] .leading-tight, html[lang='si'] .leading-snug, html[lang='si'] .leading-none, html[lang='ta'] .leading-tight, html[lang='ta'] .leading-snug, html[lang='ta'] .leading-none { line-height: 1.5 !important; }
+
+html[lang='ta'] .tab-label { font-size: 0.58rem; letter-spacing: 0; }
+html[lang='si'] .tab-label { font-size: 0.62rem; }

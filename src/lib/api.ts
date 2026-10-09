@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { t } from './i18n';
 import type { AnnouncementPublic, Category, DeviceStatus, FollowedCase, NotifPrefs, NotificationItem, OwnerComment, OwnerPost, Page, PageMeta, PostDetail, PostSummary, PublicComment } from './types';
 
 const baseURL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? 'http://localhost:4000/api/v1';
@@ -51,9 +52,9 @@ function normalize(err: unknown): ApiError {
     else if (status >= 500 || FRIENDLY[code]) message = FRIENDLY[code] ?? FRIENDLY.INTERNAL_ERROR!;
     return new ApiError(message, status, code, fields, retryAfter);
   }
-  if (e.code === 'ECONNABORTED') return new ApiError('The server took too long to answer. Please try again.', 0, 'TIMEOUT');
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return new ApiError('You are offline. Check your connection and try again.', 0, 'NETWORK_ERROR');
-  return new ApiError('Cannot reach the server. Check your connection and try again.', 0, 'NETWORK_ERROR');
+  if (e.code === 'ECONNABORTED') return new ApiError(t('The server took too long to answer. Please try again.'), 0, 'TIMEOUT');
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return new ApiError(t('You are offline. Check your connection and try again.'), 0, 'NETWORK_ERROR');
+  return new ApiError(t('Cannot reach the server. Check your connection and try again.'), 0, 'NETWORK_ERROR');
 }
 
 /* ───── slow-request tracking: lets the UI say "waking up the server" instead of looking frozen ───── */
@@ -214,7 +215,7 @@ type DeviceHeaders = { headers: Record<string, string> };
 /** Runs a device-authenticated request. `create` = register the device first if this browser has none yet. */
 async function withDevice<T>(run: (h: DeviceHeaders) => Promise<T>, create = true): Promise<T> {
   let token = create ? await ensureDevice() : deviceStore.get();
-  if (!token) throw new ApiError('This device has no notification settings yet.', 0, 'NO_DEVICE');
+  if (!token) throw new ApiError(t('This device has no notification settings yet.'), 0, 'NO_DEVICE');
   try {
     return await run({ headers: { 'X-Device-Token': token } });
   } catch (e) {

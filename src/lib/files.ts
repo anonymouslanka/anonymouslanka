@@ -1,4 +1,5 @@
 import { API_BASE } from './api';
+import { t } from './i18n';
 import type { FileDto, ImageDto } from './types';
 
 export const DOC_EXT = ['pdf', 'docx', 'xlsx', 'pptx', 'txt'];
@@ -24,6 +25,6 @@ const letter = (i: number): string => String.fromCharCode(65 + i);
 
 /** Photos first, then documents — the order the viewer swipes through. */
 export const viewerItems = (images: ImageDto[], files: FileDto[]): ViewerItem[] => [
-  ...images.map((img, i): ViewerItem => ({ kind: 'image', id: img.id, src: img.large, label: `Exhibit ${letter(i)}` })),
+  ...images.map((img, i): ViewerItem => ({ kind: 'image', id: img.id, src: img.large, label: t('Exhibit {x}', { x: letter(i) }) })),
   ...files.map((f): ViewerItem => ({ kind: 'file', id: f.id, label: `${f.name}.${f.ext}`, name: f.name, ext: f.ext, bytes: f.bytes, url: fileUrl(f) })),
 ];

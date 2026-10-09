@@ -2,6 +2,7 @@ import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { useAsync } from '../lib/hooks';
 import { MAX_FILES } from '../lib/files';
+import { useT } from '../lib/i18n';
 import type { FileDto, ImageDto, OwnerPost } from '../lib/types';
 import { Icon, IconName } from './Icon';
 import { FilePicker, FileRow } from './FilePicker';
@@ -29,16 +30,17 @@ export const clearCaseDraft = (): void => {
 };
 
 function Section({ n, icon, title, hint, children }: { n: number; icon: IconName; title: string; hint?: string; children: ReactNode }) {
+  const tr = useT();
   return (
     <section className="card p-5 sm:p-6">
       <div className="mb-4 flex items-center gap-3">
         <span className="grid h-10 w-10 place-items-center rounded-xl bg-folder text-[#7a5a14]"><Icon name={icon} size={21} /></span>
         <div>
-          <p className="font-mono text-[0.62rem] tracking-[0.16em] text-[#9b7621] uppercase">Section {n}</p>
-          <h2 className="font-display text-lg leading-tight font-bold">{title}</h2>
+          <p className="font-mono text-[0.62rem] tracking-[0.16em] text-[#9b7621] uppercase">{tr('Section {n}', { n })}</p>
+          <h2 className="font-display text-lg leading-tight font-bold">{tr(title)}</h2>
         </div>
       </div>
-      {hint && <p className="-mt-1 mb-4 text-sm text-ink-soft">{hint}</p>}
+      {hint && <p className="-mt-1 mb-4 text-sm text-ink-soft">{tr(hint)}</p>}
       <div className="space-y-5">{children}</div>
     </section>
   );
@@ -63,6 +65,7 @@ export function CaseForm({
   submitLabel: string;
   onSubmit: (form: FormData) => void;
 }) {
+  const tr = useT();
   const toast = useToast();
   const categories = useAsync(() => api.categories(), []);
   const draft = useRef(initial ? null : readDraft());
@@ -97,7 +100,7 @@ export function CaseForm({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      toast('error', 'You are offline. Your draft is saved on this device — try again when you are back online.');
+      toast('error', tr('You are offline. Your draft is saved on this device — try again when you are back online.'));
       return;
     }
     const fd = new FormData();
@@ -127,13 +130,13 @@ export function CaseForm({
       {!edit && (
         <div className="flex items-start gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
           <Icon name="shieldCheck" size={22} className="mt-0.5 shrink-0" />
-          <p><strong>No personal information needed.</strong> No name, email or phone number — ever. You get a secret case key instead of an account, and photo location data is stripped automatically.</p>
+          <p><strong>{tr('No personal information needed.')}</strong> {tr('No name, email or phone number — ever. You get a secret case key instead of an account, and photo location data is stripped automatically.')}</p>
         </div>
       )}
       {draft.current && !edit && (
         <p className="flex items-center gap-2 rounded-xl bg-folder/50 px-3.5 py-2.5 text-xs font-semibold text-[#7a5a14]">
-          <Icon name="file" size={15} /> Restored your unsent draft from this device.
-          <button type="button" className="ml-auto underline" onClick={() => { clearCaseDraft(); setTitle(''); setContent(''); setCategory(''); setTags(''); draft.current = null; }}>Discard</button>
+          <Icon name="file" size={15} /> {tr('Restored your unsent draft from this device.')}
+          <button type="button" className="ml-auto underline" onClick={() => { clearCaseDraft(); setTitle(''); setContent(''); setCategory(''); setTags(''); draft.current = null; }}>{tr('Discard')}</button>
         </p>
       )}
 
@@ -143,13 +146,13 @@ export function CaseForm({
 
       <Section n={1} icon="file" title="The case" hint="Stick to facts you saw or can show: what happened, where and when.">
         <div>
-          <label htmlFor="title" className="label">Case title</label>
-          <input id="title" className="input" required minLength={5} maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="A short, factual headline" enterKeyHint="next" />
+          <label htmlFor="title" className="label">{tr('Case title')}</label>
+          <input id="title" className="input" required minLength={5} maxLength={160} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr('A short, factual headline')} enterKeyHint="next" />
           <FieldError messages={f.title} />
         </div>
         <div>
-          <label htmlFor="content" className="label">Summary of events</label>
-          <textarea id="content" className="input min-h-52" required minLength={20} maxLength={10000} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Describe the events in your own words. Do not include private details about private individuals." />
+          <label htmlFor="content" className="label">{tr('Summary of events')}</label>
+          <textarea id="content" className="input min-h-52" required minLength={20} maxLength={10000} value={content} onChange={(e) => setContent(e.target.value)} placeholder={tr('Describe the events in your own words. Do not include private details about private individuals.')} />
           <div className="mt-1 flex justify-between text-xs text-ink-soft"><FieldError messages={f.content} /><span className="ml-auto">{content.length}/10000</span></div>
         </div>
       </Section>
@@ -157,15 +160,15 @@ export function CaseForm({
       <Section n={2} icon="tag" title="Classification">
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
-            <label htmlFor="category" className="label">Case type</label>
+            <label htmlFor="category" className="label">{tr('Case type')}</label>
             <select id="category" className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">Not specified</option>
+              <option value="">{tr('Not specified')}</option>
               {categories.data?.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
             </select>
             <FieldError messages={f.category} />
           </div>
           <div>
-            <label htmlFor="tags" className="label">Keywords (max 5)</label>
+            <label htmlFor="tags" className="label">{tr('Keywords (max 5)')}</label>
             <input id="tags" className="input" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="colombo, online, sms" autoCapitalize="none" />
             <FieldError messages={f.tags} />
           </div>
@@ -178,13 +181,13 @@ export function CaseForm({
             {existing.map((img, i) => (
               <div key={img.id} className="relative aspect-square overflow-hidden rounded-2xl border border-black/10 bg-white p-1.5">
                 <img src={img.thumb} alt="" crossOrigin="anonymous" className="h-full w-full rounded-xl object-cover" />
-                <span className="absolute bottom-2.5 left-2.5 rounded-md bg-ink/85 px-1.5 py-0.5 font-mono text-[0.6rem] tracking-widest text-white uppercase">Exhibit {String.fromCharCode(65 + i)}</span>
-                <button type="button" aria-label="Remove this exhibit" onClick={() => setRemoved((r) => [...r, img.id])} className="absolute top-2.5 right-2.5 grid h-9 w-9 place-items-center rounded-full bg-ink/85 text-white active:bg-red-600"><Icon name="x" size={16} strokeWidth={2.6} /></button>
+                <span className="absolute bottom-2.5 left-2.5 rounded-md bg-ink/85 px-1.5 py-0.5 font-mono text-[0.6rem] tracking-widest text-white uppercase">{tr('Exhibit {x}', { x: String.fromCharCode(65 + i) })}</span>
+                <button type="button" aria-label={tr('Remove this exhibit')} onClick={() => setRemoved((r) => [...r, img.id])} className="absolute top-2.5 right-2.5 grid h-9 w-9 place-items-center rounded-full bg-ink/85 text-white active:bg-red-600"><Icon name="x" size={16} strokeWidth={2.6} /></button>
               </div>
             ))}
           </div>
         )}
-        {slots > 0 ? <ImagePicker slots={slots} onChange={setFiles} onError={(m) => toast('error', m)} /> : <p className="text-sm text-ink-soft">Maximum exhibits reached.</p>}
+        {slots > 0 ? <ImagePicker slots={slots} onChange={setFiles} onError={(m) => toast('error', m)} /> : <p className="text-sm text-ink-soft">{tr('Maximum exhibits reached.')}</p>}
         <FieldError messages={f.images} />
       </Section>
 
@@ -194,21 +197,21 @@ export function CaseForm({
             {existingDocs.map((d) => <FileRow key={d.id} file={d} onRemove={() => setRemovedDocs((r) => [...r, d.id])} />)}
           </div>
         )}
-        {docSlots > 0 ? <FilePicker slots={docSlots} onChange={setDocs} onError={(m) => toast('error', m)} /> : <p className="text-sm text-ink-soft">Maximum documents reached.</p>}
+        {docSlots > 0 ? <FilePicker slots={docSlots} onChange={setDocs} onError={(m) => toast('error', m)} /> : <p className="text-sm text-ink-soft">{tr('Maximum documents reached.')}</p>}
         <FieldError messages={f.files} />
       </Section>
 
       {!edit && (
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-black/10 bg-white p-4 text-sm">
           <input type="checkbox" required checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-brand-600)]" />
-          <span>I have read the <a href="/guidelines" target="_blank" className="font-bold text-brand-700 underline">code of conduct</a>. This case is truthful to the best of my knowledge and contains no private personal data (addresses, phone or ID numbers) of private individuals.</span>
+          <span>{tr('I have read the')} <a href="/guidelines" target="_blank" className="font-bold text-brand-700 underline">{tr('code of conduct')}</a>. {tr('This case is truthful to the best of my knowledge and contains no private personal data (addresses, phone or ID numbers) of private individuals.')}</span>
         </label>
       )}
 
       <div className="sticky bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-10">
         <button className="btn-primary w-full !min-h-14 !rounded-2xl text-base" disabled={busy || !agree}>
           {busy ? <Spinner /> : <Icon name={edit ? 'check' : 'folderPlus'} size={22} />}
-          {busy ? (progress != null && progress < 100 && (files.length || docs.length) ? `Uploading ${progress}%` : 'Filing…') : submitLabel}
+          {busy ? (progress != null && progress < 100 && (files.length || docs.length) ? tr('Uploading {n}%', { n: progress }) : tr('Filing…')) : tr(submitLabel)}
         </button>
       </div>
     </form>

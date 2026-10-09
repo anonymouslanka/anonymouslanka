@@ -1,5 +1,6 @@
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '../lib/i18n';
 import { Spinner } from './ui';
 
 /** One page. Rendered only while near the screen and released again when far away, so long PDFs stay light. */
@@ -58,6 +59,7 @@ function Page({ doc, n, width, ratio }: { doc: PDFDocumentProxy; n: number; widt
 
 /** Scrollable PDF reader (pdf.js, loaded only when a PDF is opened). */
 export default function PdfView({ url, onFail }: { url: string; onFail: () => void }) {
+  const t = useT();
   const box = useRef<HTMLDivElement>(null);
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
   const [ratio, setRatio] = useState(1.414);
@@ -122,14 +124,14 @@ export default function PdfView({ url, onFail }: { url: string; onFail: () => vo
       <div ref={box} onScroll={onScroll} className="h-full space-y-3 overflow-y-auto overscroll-contain bg-neutral-800 p-2 pb-16" style={{ touchAction: 'pan-y' }}>
         {!doc && !failed && (
           <div className="grid h-full place-items-center text-sm text-white/80">
-            <span className="flex items-center gap-2.5"><Spinner /> Opening document…</span>
+            <span className="flex items-center gap-2.5"><Spinner /> {t('Opening document…')}</span>
           </div>
         )}
         {doc && Array.from({ length: doc.numPages }, (_, i) => <Page key={i} doc={doc} n={i + 1} width={width} ratio={ratio} />)}
       </div>
       {doc && doc.numPages > 1 && (
         <span className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3.5 py-1.5 font-mono text-xs tracking-wider text-white">
-          Page {page} / {doc.numPages}
+          {t('Page {n} / {total}', { n: page, total: doc.numPages })}
         </span>
       )}
     </div>

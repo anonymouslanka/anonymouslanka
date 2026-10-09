@@ -6,6 +6,7 @@ import { InstallCard } from '../components/Pwa';
 import { CaseRowSkeleton, Dialog, EmptyState, ErrorState, Spinner } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { useAsync } from '../lib/hooks';
+import { useT } from '../lib/i18n';
 import { Stagger } from '../lib/motion';
 import { PullIndicator, usePullToRefresh } from '../lib/ptr';
 import type { PostSummary } from '../lib/types';
@@ -32,6 +33,7 @@ function Segmented<T extends string>({ value, onChange, options }: { value: T; o
 }
 
 export default function Home() {
+  const t = useT();
   const [params, setParams] = useSearchParams();
   const category = params.get('category') ?? '';
   const tag = params.get('tag') ?? '';
@@ -111,34 +113,34 @@ export default function Home() {
       <InstallCard />
 
       <header className="mb-4">
-        <h1 className="font-display text-3xl leading-tight font-bold sm:text-4xl">Case files</h1>
-        <p className="mt-1 max-w-xl text-sm text-ink-soft">Open cases reported by the public. Every file is reviewed by a moderator before it is published.</p>
+        <h1 className="font-display text-3xl leading-tight font-bold sm:text-4xl">{t('Case files')}</h1>
+        <p className="mt-1 max-w-xl text-sm text-ink-soft">{t('Open cases reported by the public. Every file is reviewed by a moderator before it is published.')}</p>
       </header>
 
-      <section aria-label="Search and filters" className="mb-4 space-y-3">
+      <section aria-label={t('Search and filters')} className="mb-4 space-y-3">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <label htmlFor="search" className="sr-only">Search cases</label>
+            <label htmlFor="search" className="sr-only">{t('Search cases')}</label>
             <span className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-stone-400"><Icon name="search" size={20} /></span>
-            <input id="search" type="search" enterKeyHint="search" className="input !h-[3.25rem] !rounded-2xl !pl-11" placeholder="Search by title or case number" value={q} onChange={(e) => setQ(e.target.value)} maxLength={80} />
+            <input id="search" type="search" enterKeyHint="search" className="input !h-[3.25rem] !rounded-2xl !pl-11" placeholder={t('Search by title or case number')} value={q} onChange={(e) => setQ(e.target.value)} maxLength={80} />
           </div>
-          <button onClick={() => setSheet(true)} className="btn-secondary relative !min-h-[3.25rem] !rounded-2xl !px-4" aria-label="Filters">
+          <button onClick={() => setSheet(true)} className="btn-secondary relative !min-h-[3.25rem] !rounded-2xl !px-4" aria-label={t('Filters')}>
             <Icon name="sliders" size={22} />
             {activeFilters > 0 && <span className="absolute -top-1.5 -right-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand-600 px-1 text-[0.65rem] font-bold text-white">{activeFilters}</span>}
           </button>
         </div>
 
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 lg:-mx-10 lg:px-10" role="group" aria-label="Filter by case type">
-          <Chip active={!category} onClick={() => setParam({ category: '' })}>All types</Chip>
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 lg:-mx-10 lg:px-10" role="group" aria-label={t('Filter by case type')}>
+          <Chip active={!category} onClick={() => setParam({ category: '' })}>{t('All types')}</Chip>
           {categories.data?.map((c) => (
-            <Chip key={c.slug} active={category === c.slug} onClick={() => setParam({ category: category === c.slug ? '' : c.slug })}>{c.name}</Chip>
+            <Chip key={c.slug} active={category === c.slug} onClick={() => setParam({ category: category === c.slug ? '' : c.slug })}>{t(c.name)}</Chip>
           ))}
         </div>
 
         {activeFilters > 0 && (
           <div className="flex flex-wrap gap-2">
-            {sort === 'oldest' && <button className="chip chip-active" onClick={() => setParam({ sort: '' })}>Oldest first <Icon name="x" size={13} /></button>}
-            {exhibits && <button className="chip chip-active" onClick={() => setParam({ exhibits: '' })}>With exhibits <Icon name="x" size={13} /></button>}
+            {sort === 'oldest' && <button className="chip chip-active" onClick={() => setParam({ sort: '' })}>{t('Oldest first')} <Icon name="x" size={13} /></button>}
+            {exhibits && <button className="chip chip-active" onClick={() => setParam({ exhibits: '' })}>{t('With exhibits')} <Icon name="x" size={13} /></button>}
             {tag && <button className="chip chip-active" onClick={() => setParam({ tag: '' })}>#{tag} <Icon name="x" size={13} /></button>}
           </div>
         )}
@@ -152,9 +154,9 @@ export default function Home() {
             {!loading && items.length === 0 && (
               <EmptyState
                 icon={filtered ? 'search' : 'inbox'}
-                title={filtered ? 'No case files match' : 'No open cases yet'}
-                message={filtered ? 'Try different words or clear your filters.' : 'Case files appear here once a moderator clears them.'}
-                action={filtered ? <button className="btn-secondary" onClick={clearAll}>Clear filters</button> : <Link to="/open-case" className="btn-primary"><Icon name="folderPlus" size={20} /> Open a case</Link>}
+                title={filtered ? t('No case files match') : t('No open cases yet')}
+                message={filtered ? t('Try different words or clear your filters.') : t('Case files appear here once a moderator clears them.')}
+                action={filtered ? <button className="btn-secondary" onClick={clearAll}>{t('Clear filters')}</button> : <Link to="/open-case" className="btn-primary"><Icon name="folderPlus" size={20} /> {t('Open a case')}</Link>}
               />
             )}
             {items.length > 0 && (
@@ -170,7 +172,7 @@ export default function Home() {
             {hasMore && !loading && (
               <div className="mt-6 flex justify-center">
                 <button className="btn-secondary !px-6" onClick={() => load(cursor)}>
-                  {loading && <Spinner />} Load more cases
+                  {loading && <Spinner />} {t('Load more cases')}
                 </button>
               </div>
             )}
@@ -178,24 +180,24 @@ export default function Home() {
         )}
       </section>
 
-      <Dialog open={sheet} onClose={() => setSheet(false)} title="Filter case files">
+      <Dialog open={sheet} onClose={() => setSheet(false)} title={t('Filter case files')}>
         <div className="space-y-6">
           <div>
-            <p className="label">Order</p>
-            <Segmented value={sort} onChange={(v) => setParam({ sort: v === 'oldest' ? 'oldest' : '' })} options={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]} />
+            <p className="label">{t('Order')}</p>
+            <Segmented value={sort} onChange={(v) => setParam({ sort: v === 'oldest' ? 'oldest' : '' })} options={[{ value: 'newest', label: t('Newest first') }, { value: 'oldest', label: t('Oldest first') }]} />
           </div>
           <div>
-            <p className="label">Evidence</p>
+            <p className="label">{t('Evidence')}</p>
             <button role="switch" aria-checked={exhibits} onClick={() => setParam({ exhibits: exhibits ? '' : 'true' })} className="flex min-h-12 w-full items-center justify-between rounded-2xl border border-black/15 bg-white px-4 text-left text-sm font-bold">
-              <span className="flex items-center gap-2.5"><Icon name="image" size={20} /> Only cases with photo exhibits</span>
+              <span className="flex items-center gap-2.5"><Icon name="image" size={20} /> {t('Only cases with photo exhibits')}</span>
               <span className={cx('relative h-7 w-12 rounded-full transition-colors duration-150', exhibits ? 'bg-brand-600' : 'bg-stone-300')}>
                 <span className={cx('absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform duration-150', exhibits ? 'translate-x-[22px]' : 'translate-x-0.5')} />
               </span>
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <button className="btn-secondary" onClick={() => { clearAll(); setSheet(false); }}>Reset all</button>
-            <button className="btn-primary" onClick={() => setSheet(false)}>Show cases</button>
+            <button className="btn-secondary" onClick={() => { clearAll(); setSheet(false); }}>{t('Reset all')}</button>
+            <button className="btn-primary" onClick={() => setSheet(false)}>{t('Show cases')}</button>
           </div>
         </div>
       </Dialog>
