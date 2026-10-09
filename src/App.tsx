@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { PwaProvider } from './components/Pwa';
@@ -53,6 +54,7 @@ export default function App() {
                 </Route>
               </Routes>
             </BrowserRouter>
+            <Analytics />
           </PwaProvider>
         </ToastProvider>
       </MotionProvider>
