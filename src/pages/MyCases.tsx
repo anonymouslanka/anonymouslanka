@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CaseTracker } from '../components/CaseTracker';
 import { Icon } from '../components/Icon';
@@ -19,8 +19,6 @@ export default function MyCases() {
   const t = useT();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [statements, setStatements] = useState<OwnerComment[] | null>(null);
-  const [importId, setImportId] = useState('');
-  const [importKey, setImportKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<ParsedKeyFile | null>(null);
   const [filePw, setFilePw] = useState('');
@@ -101,23 +99,6 @@ export default function MyCases() {
     }
   };
 
-  const addExisting = async (e: FormEvent) => {
-    e.preventDefault();
-    const id = importId.trim().split('/').pop()?.toLowerCase() ?? '';
-    setBusy(true);
-    try {
-      await api.getOwnerPost(id, importKey.trim());
-      storage.savePostKey(id, importKey.trim());
-      setImportId('');
-      setImportKey('');
-      toast('success', t('Case added to this device.'));
-      await load();
-    } catch (err) {
-      toast('error', (err as ApiError).message);
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <div className="mx-auto max-w-3xl xl:max-w-6xl">
@@ -193,14 +174,6 @@ export default function MyCases() {
           <input type="file" accept=".txt,text/plain" className="sr-only" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ''; }} />
         </label>
       </section>
-
-      <form onSubmit={addExisting} className="card mt-4 space-y-3 p-5">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><Icon name="key" size={20} /> {t('Track a case from another device')}</h2>
-        <p className="text-sm text-ink-soft">{t('Paste the case link (or its ID) and your key. It is verified, then saved only in this browser so you can follow its progress here.')}</p>
-        <input className="input" required placeholder={t('Case link or ID')} value={importId} onChange={(e) => setImportId(e.target.value)} autoComplete="off" autoCapitalize="none" />
-        <input className="input font-code" required placeholder={t('Case key')} value={importKey} onChange={(e) => setImportKey(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} />
-        <button className="btn-primary" disabled={busy}>{busy && <Spinner />} {t('Track case')}</button>
-      </form>
       <Dialog open={pending !== null} onClose={() => { setPending(null); setFilePw(''); }} title={t('This file has a password')}>
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (pending) void finishImport(pending, filePw); }}>
           <p className="text-sm text-ink-soft">{t('Type the password you chose when you downloaded it.')}</p>
