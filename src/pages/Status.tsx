@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon, IconName } from '../components/Icon';
+import { HapticsCheck } from '../components/HapticsCheck';
 import { Spinner } from '../components/ui';
 import { API_BASE } from '../lib/api';
 import { cx, usePageMeta } from '../lib/util';
@@ -191,6 +192,7 @@ export default function Status() {
           ))}
         </div>
       </section>
+      <HapticsCheck />
     </div>
   );
 }
