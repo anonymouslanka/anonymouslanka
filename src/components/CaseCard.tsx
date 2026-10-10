@@ -19,7 +19,6 @@ export function CaseCard({ post }: { post: PostSummary }) {
           <div className="mb-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
             <span className="font-mono text-[0.72rem] tracking-[0.1em] text-[#7a5a14]">{caseNo(post.id)}</span>
             {post.category && <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-[0.68rem] font-bold text-brand-800">{post.category.name}</span>}
-            {post.origin === 'AI' && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[0.68rem] font-bold text-emerald-900"><Icon name="shieldCheck" size={11} /> DL-ai</span>}
           </div>
           <h3 className="font-display text-[1.06rem] leading-snug font-bold text-ink">{post.title}</h3>
           <p className="mt-1.5 line-clamp-2 text-sm text-ink-soft">{post.excerpt}</p>
@@ -29,15 +28,18 @@ export function CaseCard({ post }: { post: PostSummary }) {
             <span className="inline-flex items-center gap-1.5"><Icon name="chat" size={14} /> {post.commentCount}</span>
           </div>
         </div>
-        {img ? (
-          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-stone-200 sm:h-28 sm:w-28">
-            <img src={img.thumb} alt="" crossOrigin="anonymous" width={224} height={224} loading="lazy" decoding="async" className="h-full w-full object-cover" />
-          </div>
-        ) : (
-          <div className="grid h-24 w-24 shrink-0 place-items-center rounded-xl bg-folder/55 text-[#9b7621] sm:h-28 sm:w-28" aria-hidden="true">
-            <Icon name="file" size={32} />
-          </div>
-        )}
+        <div className="flex shrink-0 flex-col items-end justify-between gap-2">
+          {img ? (
+            <div className="h-24 w-24 overflow-hidden rounded-xl bg-stone-200 sm:h-28 sm:w-28">
+              <img src={img.thumb} alt="" crossOrigin="anonymous" width={224} height={224} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            </div>
+          ) : (
+            <div className="grid h-24 w-24 place-items-center rounded-xl bg-folder/55 text-[#9b7621] sm:h-28 sm:w-28" aria-hidden="true">
+              <Icon name="file" size={32} />
+            </div>
+          )}
+          {post.origin === 'AI' && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[0.68rem] font-bold text-emerald-900"><Icon name="shieldCheck" size={11} /> DL-ai</span>}
+        </div>
       </Link>
     </article>
   );

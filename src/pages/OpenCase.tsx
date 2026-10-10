@@ -39,7 +39,7 @@ export default function OpenCase() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl xl:max-w-6xl">
       <button onClick={() => navigate(-1)} className="chrome mb-3 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex">
         <Icon name="chevronLeft" size={18} /> {t('Back')}
       </button>
@@ -51,6 +51,7 @@ export default function OpenCase() {
         open={created !== null}
         editKey={created?.key ?? ''}
         kind="case"
+        refId={created?.id ?? ''}
         savedLocally={created?.saved ?? false}
         onDone={() => {
           toast('success', t('Case filed. A moderator will review it shortly.'));

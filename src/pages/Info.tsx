@@ -28,10 +28,10 @@ function Article({ n, icon, title, children }: { n: number; icon: IconName; titl
 function Page({ title, intro, children }: { title: string; intro: string; children: ReactNode }) {
   const t = useT();
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl xl:max-w-6xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{t(title)}</h1>
       <p className="mt-2 mb-6 text-ink-soft">{t(intro)}</p>
-      <div className="space-y-4">{children}</div>
+      <div className="space-y-4 xl:grid xl:grid-cols-2 xl:items-start xl:gap-4 xl:space-y-0">{children}</div>
     </div>
   );
 }

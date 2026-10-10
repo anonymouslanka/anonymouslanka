@@ -2,6 +2,7 @@ import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { IoLanguage } from 'react-icons/io5';
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
+import { preloadPages } from '../lib/preload';
 import { resyncPush, UnreadCtx, useUnreadProvider } from '../lib/notify';
 import { cx } from '../lib/util';
 import { ConnectionBanner } from './ConnectionBanner';
@@ -120,6 +121,10 @@ export function Layout() {
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [pathname]);
+
+  useEffect(() => {
+    preloadPages();
+  }, []);
 
   // The service worker tells the open app when a push arrives or a notification is tapped; the app re-checks, or opens that screen.
   useEffect(() => {

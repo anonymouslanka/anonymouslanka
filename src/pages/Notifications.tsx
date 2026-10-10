@@ -104,7 +104,7 @@ export default function Notifications() {
   const unreadHere = items.filter((i) => !i.read).length;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl xl:max-w-5xl">
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('Notifications')}</h1>
         <Link to="/notifications/settings" className="btn-secondary !h-11 !w-11 !min-h-11 !p-0" aria-label={t('Notification settings')}>
@@ -132,7 +132,7 @@ export default function Notifications() {
           <EmptyState icon="bell" title={t('Nothing here yet')} message={t('When a new case file is published, a moderator posts an announcement, or a case you follow gets a statement, it will appear here.')} />
         ) : (
           <>
-            <Stagger as="ul" className="space-y-3">
+            <Stagger as="ul" className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-3 xl:space-y-0">
               {items.map((n) => {
                 const k = KIND[n.kind] ?? KIND.ANNOUNCEMENT!;
                 return (

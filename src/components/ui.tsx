@@ -18,6 +18,7 @@ interface ToastItem {
   kind: ToastKind;
   message: string;
   ms: number;
+  leaving?: boolean;
 }
 const ToastCtx = createContext<(kind: ToastKind, message: string) => void>(() => undefined);
 export const useToast = () => useContext(ToastCtx);
@@ -48,16 +49,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const ms = toastTone[kind].ms;
       if (kind === 'error') haptics.error();
       else if (kind === 'success') haptics.success();
-      setItems((x) => {
-        // the same message twice is shown once (and restarts its timer)
-        const same = x.find((i) => i.kind === kind && i.message === message);
-        if (same) {
-          const t = timers.current.get(same.id);
-          if (t) clearTimeout(t);
-          timers.current.delete(same.id);
-        }
-        return [...x.filter((i) => i !== same).slice(-2), { id, kind, message, ms }];
-      });
+      // Anything still on screen is told to wrap up: its bar races to the end and it fades out, then the new one shows normally.
+      for (const [oldId, timer] of timers.current) {
+        clearTimeout(timer);
+        timers.current.set(oldId, setTimeout(() => dismiss(oldId), 520));
+      }
+      setItems((x) => [...x.map((i) => (i.leaving ? i : { ...i, leaving: true })), { id, kind, message, ms }]);
       timers.current.set(id, setTimeout(() => dismiss(id), ms));
     },
     [dismiss],
@@ -70,7 +67,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {items.map((item) => {
           const tone = toastTone[item.kind];
           return (
-            <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className={cx('toast-in pointer-events-auto relative flex w-full max-w-sm items-start gap-3 overflow-hidden rounded-2xl border py-3 pr-2 pl-3.5', tone.card)}>
+            <div key={item.id} role={item.kind === 'error' ? 'alert' : 'status'} className={cx('toast-in pointer-events-auto relative', item.leaving && 'toast-leaving', 'flex w-full max-w-sm items-start gap-3 overflow-hidden rounded-2xl border py-3 pr-2 pl-3.5', tone.card)}>
               <span className={cx('mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full', tone.bubble, tone.motion)}>
                 <Icon name={tone.glyph} size={17} strokeWidth={2.8} />
               </span>
@@ -81,7 +78,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button type="button" onClick={() => dismiss(item.id)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-black/45 active:bg-black/10" aria-label={t('Dismiss notification')} data-no-haptic>
                 <Icon name="x" size={16} strokeWidth={2.6} />
               </button>
-              <span className={cx('toast-bar absolute inset-x-0 bottom-0 h-1 origin-left', tone.bar)} style={{ animationDuration: `${item.ms}ms` }} aria-hidden="true" />
+              <span className={cx('toast-bar absolute inset-x-0 bottom-0 h-1 origin-left', tone.bar)} style={item.leaving ? undefined : { animationDuration: `${item.ms}ms` }} aria-hidden="true" />
             </div>
           );
         })}
@@ -135,19 +132,21 @@ export function Dialog({
       )}
     >
       {open && (
-        <div className="max-h-[92dvh] overflow-y-auto overscroll-contain p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6">
-          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-stone-300 sm:hidden" aria-hidden="true" />
-          <div className="mb-4 flex items-start justify-between gap-4">
-            <h2 id="dlg-title" className="font-display text-xl font-bold">
-              {title}
-            </h2>
-            {dismissable && (
-              <button type="button" onClick={onClose} aria-label={t('Close')} className="btn-ghost -mt-1 -mr-2 !min-h-10 !px-3">
-                <Icon name="x" size={18} />
-              </button>
-            )}
+        <div className="flex max-h-[92dvh] flex-col">
+          <div className="shrink-0 px-5 pt-5 sm:px-6 sm:pt-6">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-stone-300 sm:hidden" aria-hidden="true" />
+            <div className="flex items-start justify-between gap-4 border-b border-black/10 pb-3">
+              <h2 id="dlg-title" className="font-display text-xl font-bold">
+                {title}
+              </h2>
+              {dismissable && (
+                <button type="button" onClick={onClose} aria-label={t('Close')} className="btn-ghost -mt-1 -mr-2 !min-h-10 !px-3">
+                  <Icon name="x" size={18} />
+                </button>
+              )}
+            </div>
           </div>
-          {children}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6">{children}</div>
         </div>
       )}
     </dialog>

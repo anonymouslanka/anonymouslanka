@@ -172,6 +172,8 @@ export default function CaseFile() {
         </div>
       </div>
 
+      <div className="xl:grid xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] xl:items-start xl:gap-8">
+      <div>
       <section className="mt-6 page-in">
         <h2 className="mb-2 font-mono text-xs tracking-[0.14em] text-ink-soft uppercase">{t('Summary of events')}</h2>
         <div className="card p-5 sm:p-6"><div className="prose-plain text-[1.02rem]">{post.content}</div></div>
@@ -212,9 +214,13 @@ export default function CaseFile() {
         <p><strong>{t('Notice.')}</strong> {t('This is an anonymous, public-submitted case file that was reviewed by a moderator but not independently verified. If you believe it contains an error or private information, file a statement or report the case.')} {t('In an emergency call')} <strong>119</strong>.</p>
       </div>
 
+      </div>
+      <div>
       <PunishmentPoll postId={post.id} />
 
       <Statements postId={post.id} composerOpen={composer} setComposerOpen={setComposer} />
+      </div>
+      </div>
 
       {/* Fixed action bar on every screen size: add a statement, share, manage your case or report it */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-[#f8f4ea] px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:left-72">

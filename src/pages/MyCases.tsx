@@ -2,10 +2,11 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CaseTracker } from '../components/CaseTracker';
 import { Icon } from '../components/Icon';
-import { EmptyState, Skeleton, Spinner, StatusBadge, useToast } from '../components/ui';
+import { Dialog, EmptyState, Skeleton, Spinner, StatusBadge, useToast } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { Stagger, StaggerItem } from '../lib/motion';
+import { KeyFileError, ParsedKeyFile, readKeyFile } from '../lib/keyfile';
 import { storage } from '../lib/storage';
 import type { OwnerComment, OwnerPost } from '../lib/types';
 import { caseNo, formatDate, timeAgo, usePageMeta } from '../lib/util';
@@ -21,6 +22,8 @@ export default function MyCases() {
   const [importId, setImportId] = useState('');
   const [importKey, setImportKey] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<ParsedKeyFile | null>(null);
+  const [filePw, setFilePw] = useState('');
 
   const load = useCallback(async () => {
     const ids = storage.listPostIds();
@@ -60,6 +63,44 @@ export default function MyCases() {
     void load();
   }, [load]);
 
+  /** Reads an access file in the browser (it is never uploaded), unseals the key and checks it with the owner request. */
+  const finishImport = async (parsed: ParsedKeyFile, password?: string) => {
+    setBusy(true);
+    try {
+      const p = await parsed.open(password);
+      if (p.kind === 'case') {
+        await api.getOwnerPost(p.id, p.key);
+        storage.savePostKey(p.id, p.key);
+        toast('success', t('Case added to this device.'));
+      } else {
+        const c = await api.getOwnerComment(p.id, p.key);
+        storage.saveCommentKey(c.postId, p.id, p.key);
+        toast('success', t('Statement added to this device.'));
+      }
+      setPending(null);
+      setFilePw('');
+      await load();
+    } catch (err) {
+      if (err instanceof KeyFileError) toast('error', t(err.message));
+      else toast('error', (err as ApiError).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const pickFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const parsed = await readKeyFile(file);
+      if (parsed.passwordProtected) {
+        setPending(parsed);
+        setFilePw('');
+      } else await finishImport(parsed);
+    } catch (err) {
+      toast('error', err instanceof KeyFileError ? t(err.message) : t('This file could not be read.'));
+    }
+  };
+
   const addExisting = async (e: FormEvent) => {
     e.preventDefault();
     const id = importId.trim().split('/').pop()?.toLowerCase() ?? '';
@@ -79,7 +120,7 @@ export default function MyCases() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-3xl xl:max-w-6xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('My cases')}</h1>
       <p className="mt-1.5 text-sm text-ink-soft">{t('Cases and statements filed from this device, with live progress. Their keys live only here, they cannot be recovered if you clear your browser data.')}</p>
 
@@ -87,7 +128,7 @@ export default function MyCases() {
         {rows === null && <div className="space-y-3">{[0, 1].map((i) => <Skeleton key={i} className="h-28 w-full !rounded-2xl" />)}</div>}
         {rows?.length === 0 && <EmptyState icon="folders" title={t('No cases on this device')} message={t('Cases you open here will show up with their review progress.')} action={<Link to="/open-case" className="btn-primary"><Icon name="folderPlus" size={20} /> {t('Open a case')}</Link>} />}
         {rows && rows.length > 0 && (
-          <Stagger className="space-y-3">
+          <Stagger className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-3 xl:space-y-0">
             {rows.map((r) => (
               <StaggerItem key={r.id}>
                 <div className="card space-y-3.5 border-l-[5px] border-l-folder-deep p-4">
@@ -124,7 +165,7 @@ export default function MyCases() {
       {statements && statements.length > 0 && (
         <section className="mt-10">
           <h2 className="mb-3 font-display text-xl font-bold">{t('My statements')}</h2>
-          <div className="space-y-3">
+          <div className="space-y-3 xl:grid xl:grid-cols-2 xl:gap-3 xl:space-y-0">
             {statements.map((c) => (
               <Link key={c.id} to={`/case/${c.postId}`} className="card flex items-start gap-3 p-4 transition-transform duration-100 active:scale-[0.99]">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-folder text-[#7a5a14]"><Icon name="chat" size={20} /></span>
@@ -144,13 +185,29 @@ export default function MyCases() {
         </section>
       )}
 
-      <form onSubmit={addExisting} className="card mt-10 space-y-3 p-5">
+      <section className="card mt-10 space-y-3 p-5">
+        <h2 className="flex items-center gap-2 font-display text-lg font-bold"><Icon name="key" size={20} /> {t('Use your access file on this device')}</h2>
+        <p className="text-sm text-ink-soft">{t('Choose the access file you downloaded when you posted. It is read inside this browser and is never uploaded.')}</p>
+        <label className="btn-primary cursor-pointer">
+          <Icon name="upload" size={18} /> {t('Import access file')}
+          <input type="file" accept=".txt,text/plain" className="sr-only" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ''; }} />
+        </label>
+      </section>
+
+      <form onSubmit={addExisting} className="card mt-4 space-y-3 p-5">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold"><Icon name="key" size={20} /> {t('Track a case from another device')}</h2>
         <p className="text-sm text-ink-soft">{t('Paste the case link (or its ID) and your key. It is verified, then saved only in this browser so you can follow its progress here.')}</p>
         <input className="input" required placeholder={t('Case link or ID')} value={importId} onChange={(e) => setImportId(e.target.value)} autoComplete="off" autoCapitalize="none" />
         <input className="input font-code" required placeholder={t('Case key')} value={importKey} onChange={(e) => setImportKey(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} />
         <button className="btn-primary" disabled={busy}>{busy && <Spinner />} {t('Track case')}</button>
       </form>
+      <Dialog open={pending !== null} onClose={() => { setPending(null); setFilePw(''); }} title={t('This file has a password')}>
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (pending) void finishImport(pending, filePw); }}>
+          <p className="text-sm text-ink-soft">{t('Type the password you chose when you downloaded it.')}</p>
+          <input className="input" type="password" autoComplete="current-password" autoFocus required value={filePw} onChange={(e) => setFilePw(e.target.value)} aria-label={t('Password')} />
+          <button className="btn-primary w-full" disabled={busy}>{busy && <Spinner />} {t('Unlock')}</button>
+        </form>
+      </Dialog>
     </div>
   );
 }

@@ -18,7 +18,7 @@ export default function Announcement() {
   if (error || !data) return <ErrorState message={error?.message ?? t('Could not load this announcement.')} onRetry={reload} />;
 
   return (
-    <article className="mx-auto max-w-2xl">
+    <article className="mx-auto max-w-2xl xl:max-w-4xl">
       <Link to="/notifications" className="chrome mb-3 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex"><Icon name="chevronLeft" size={18} /> {t('Notifications')}</Link>
       <p className="flex items-center gap-2 font-mono text-xs tracking-[0.14em] text-[#9b7621] uppercase"><Icon name="megaphone" size={15} /> {t('Announcement')} · {formatDate(data.publishedAt)}</p>
       <h1 className="mt-2 font-display text-3xl leading-tight font-bold break-words sm:text-4xl">{data.title}</h1>

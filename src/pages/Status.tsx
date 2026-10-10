@@ -121,7 +121,7 @@ export default function Status() {
   const max = Math.max(500, ...history.map((c) => c.ms));
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl xl:max-w-4xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">System status</h1>
       <p className="mt-1.5 text-sm text-ink-soft">Live availability of the Detective Lanka service. This page checks automatically.</p>
 

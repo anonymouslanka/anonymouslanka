@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Icon } from '../components/Icon';
+import { haptics } from './haptics';
+
+const THRESHOLD = 64;
 
 /**
  * Native-style pull-to-refresh for touch devices. Starts only when the page is scrolled to the very top.
@@ -31,19 +33,22 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
         setPull(0);
         return;
       }
+      const before = pullRef.current;
       pullRef.current = Math.min(dy * 0.5, 96);
+      if (before < THRESHOLD && pullRef.current >= THRESHOLD) haptics.tap();
       setPull(pullRef.current);
     };
     const end = async () => {
       if (!active) return;
       active = false;
-      const reached = pullRef.current >= 64;
+      const reached = pullRef.current >= THRESHOLD;
       pullRef.current = 0;
       setPull(0);
       if (reached) {
         setRefreshing(true);
         try {
-          await cb.current();
+          // keep the spinner up for at least a moment so a very fast reload is still noticed
+          await Promise.all([cb.current(), new Promise((r) => setTimeout(r, 700))]);
         } finally {
           setRefreshing(false);
         }
@@ -66,15 +71,20 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
 
 export function PullIndicator({ pull, refreshing }: { pull: number; refreshing: boolean }) {
   const visible = pull > 6 || refreshing;
+  const progress = Math.min(1, pull / THRESHOLD);
+  const ready = progress >= 1;
+  const C = 2 * Math.PI * 13;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-[calc(3rem+env(safe-area-inset-top))] z-20 flex justify-center lg:hidden" aria-hidden="true">
       <div
-        className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-brand-700"
-        style={{ transform: `translateY(${refreshing ? 14 : pull * 0.6}px) scale(${visible ? 1 : 0.6})`, opacity: visible ? 1 : 0, transition: pull ? 'none' : 'transform .2s, opacity .2s' }}
+        key={ready && !refreshing ? 'ready' : 'idle'}
+        className={`grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-white text-brand-700 ${ready && !refreshing ? 'ptr-ready' : ''}`}
+        style={{ transform: `translateY(${refreshing ? 12 : Math.min(pull, 80) * 0.55}px)`, opacity: visible ? 1 : 0, transition: pull ? 'none' : 'transform .25s cubic-bezier(.2,.9,.3,1), opacity .2s' }}
       >
-        <span className={refreshing ? 'animate-spin' : ''} style={{ transform: refreshing ? undefined : `rotate(${pull * 3}deg)` }}>
-          <Icon name="refresh" size={20} />
-        </span>
+        <svg width="30" height="30" viewBox="0 0 30 30" className={refreshing ? 'animate-spin' : ''} style={{ transform: refreshing ? undefined : `rotate(${-90 + pull * 2.5}deg)` }}>
+          <circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" strokeOpacity="0.15" strokeWidth="2.5" />
+          <circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={refreshing ? C * 0.7 : C * (1 - progress)} />
+        </svg>
       </div>
     </div>
   );

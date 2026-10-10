@@ -8,6 +8,7 @@ import { useT } from '../lib/i18n';
 import type { FileDto, ImageDto, OwnerComment, PublicComment } from '../lib/types';
 import { timeAgo } from '../lib/util';
 import { EditKeyDialog } from './EditKeyDialog';
+import { PrivacyTip } from './PrivacyTip';
 import { Icon } from './Icon';
 import { FilePicker, FileRow } from './FilePicker';
 import { ImagePicker, MAX_COMMENT_IMAGES } from './ImagePicker';
@@ -53,7 +54,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const [fieldErr, setFieldErr] = useState<string[]>();
-  const [newKey, setNewKey] = useState<{ key: string; saved: boolean } | null>(null);
+  const [newKey, setNewKey] = useState<{ key: string; saved: boolean; id: string } | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editRemoved, setEditRemoved] = useState<string[]>([]);
@@ -121,7 +122,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
       haptics.success();
       setResetKey((k) => k + 1);
       setComposerOpen(false);
-      setNewKey({ key: editKey, saved });
+      setNewKey({ key: editKey, saved, id: comment.id });
       await Promise.all([loadMine(), load()]);
     } catch (err) {
       const ae = err as ApiError;
@@ -290,6 +291,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
 
       <Dialog open={composerOpen} onClose={() => !busy && setComposerOpen(false)} title={t('Add a statement')}>
         <form onSubmit={submit} className="space-y-4">
+          <PrivacyTip />
           <div>
             <label htmlFor="statement" className="label">{t('Your statement')}</label>
             <textarea id="statement" className="input min-h-32" maxLength={2000} required minLength={2} value={text} onChange={(e) => setText(e.target.value)} placeholder={t('What do you know about this case? No personal details.')} />
@@ -308,7 +310,7 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
         </form>
       </Dialog>
 
-      <EditKeyDialog open={newKey !== null} editKey={newKey?.key ?? ''} kind="statement" savedLocally={newKey?.saved ?? false} onDone={() => { setNewKey(null); toast('success', t('Your statement is on file.')); }} />
+      <EditKeyDialog open={newKey !== null} editKey={newKey?.key ?? ''} kind="statement" refId={newKey?.id ?? ''} postId={postId} savedLocally={newKey?.saved ?? false} onDone={() => { setNewKey(null); toast('success', t('Your statement is on file.')); }} />
       <ConfirmDialog open={toDelete !== null} title={t('Withdraw statement?')} message={t('This permanently removes your statement, its photos and documents.')} confirmLabel={t('Withdraw')} danger busy={busy} onConfirm={confirmDelete} onClose={() => setToDelete(null)} />
       <ConfirmDialog open={toReport !== null} title={t('Report this statement?')} message={t('Use this for abuse, private personal details, threats or false claims. After 10 reports a statement is hidden and a moderator reviews it.')} confirmLabel={t('Report')} danger busy={busy} onConfirm={confirmReport} onClose={() => setToReport(null)} />
       <Viewer items={viewer?.items ?? []} index={viewer ? viewer.index : null} onIndex={(i) => setViewer((v) => (v ? { ...v, index: i } : v))} onClose={() => setViewer(null)} />

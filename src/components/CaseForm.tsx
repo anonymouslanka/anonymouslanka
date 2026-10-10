@@ -7,6 +7,7 @@ import type { FileDto, ImageDto, OwnerPost } from '../lib/types';
 import { Icon, IconName } from './Icon';
 import { FilePicker, FileRow } from './FilePicker';
 import { ImagePicker, MAX_IMAGES } from './ImagePicker';
+import { PrivacyTip } from './PrivacyTip';
 import { FieldError, Spinner, useToast } from './ui';
 
 const splitTags = (s: string) => [...new Set(s.split(/[,\s]+/).map((t) => t.replace(/^#/, '').trim().toLowerCase()).filter(Boolean))];
@@ -133,6 +134,7 @@ export function CaseForm({
           <p><strong>{tr('No personal information needed.')}</strong> {tr('No name, email or phone number, ever. You get a secret case key instead of an account, and photo location data is stripped automatically.')}</p>
         </div>
       )}
+      {!edit && <PrivacyTip />}
       {draft.current && !edit && (
         <p className="flex items-center gap-2 rounded-xl bg-folder/50 px-3.5 py-2.5 text-xs font-semibold text-[#7a5a14]">
           <Icon name="file" size={15} /> {tr('Restored your unsent draft from this device.')}
@@ -144,6 +146,8 @@ export function CaseForm({
         <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-900"><Icon name="alert" size={18} className="mt-0.5 shrink-0" /> {error.message}</p>
       )}
 
+      <div className="space-y-4 xl:grid xl:grid-cols-2 xl:items-start xl:gap-4 xl:space-y-0">
+      <div className="space-y-4">
       <Section n={1} icon="file" title="The case" hint="Stick to facts you saw or can show: what happened, where and when.">
         <div>
           <label htmlFor="title" className="label">{tr('Case title')}</label>
@@ -156,6 +160,8 @@ export function CaseForm({
           <div className="mt-1 flex justify-between text-xs text-ink-soft"><FieldError messages={f.content} /><span className="ml-auto">{content.length}/10000</span></div>
         </div>
       </Section>
+      </div>
+      <div className="space-y-4">
 
       <Section n={2} icon="tag" title="Classification">
         <div className="grid gap-5 sm:grid-cols-2">
@@ -200,6 +206,8 @@ export function CaseForm({
         {docSlots > 0 ? <FilePicker slots={docSlots} onChange={setDocs} onError={(m) => toast('error', m)} /> : <p className="text-sm text-ink-soft">{tr('Maximum documents reached.')}</p>}
         <FieldError messages={f.files} />
       </Section>
+      </div>
+      </div>
 
       {!edit && (
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-black/10 bg-white p-4 text-sm">

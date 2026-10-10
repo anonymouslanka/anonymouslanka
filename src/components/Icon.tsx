@@ -20,6 +20,7 @@ const paths = {
   clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   alert: <><path d="M12 3 2 20h20L12 3z" /><path d="M12 10v4M12 17h.01" /></>,
   download: <><path d="M12 3v12M7 11l5 5 5-5" /><path d="M5 20h14" /></>,
+  upload: <><path d="M12 16V4M7 8l5-5 5 5" /><path d="M5 20h14" /></>,
   chevronRight: <path d="m9 6 6 6-6 6" />,
   chevronLeft: <path d="m15 6-6 6 6 6" />,
   chevronDown: <path d="m6 9 6 6 6-6" />,

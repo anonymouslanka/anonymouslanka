@@ -27,7 +27,7 @@ function Switch({ label, hint, on, disabled, onChange }: { label: string; hint: 
 function Card({ icon, title, children }: { icon: IconName; title: string; children: ReactNode }) {
   const t = useT();
   return (
-    <section className="card mt-4 overflow-hidden">
+    <section className="card mt-4 break-inside-avoid overflow-hidden">
       <h2 className="flex items-center gap-2 border-b border-black/10 px-4 py-3 font-mono text-xs tracking-[0.14em] text-ink-soft uppercase"><Icon name={icon} size={15} /> {t(title)}</h2>
       {children}
     </section>
@@ -138,7 +138,7 @@ export default function NotificationSettings() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl xl:max-w-5xl">
       <Link to="/notifications" className="chrome mb-3 hidden items-center gap-1 py-1 text-sm font-bold text-ink-soft lg:inline-flex"><Icon name="chevronLeft" size={18} /> {t('Notifications')}</Link>
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('Notification settings')}</h1>
       <p className="mt-1.5 text-sm text-ink-soft">{t('Choose what you hear about. No account is needed, settings belong to this browser only.')}</p>
@@ -148,7 +148,7 @@ export default function NotificationSettings() {
       ) : !status ? (
         <div className="mt-6 space-y-4"><Skeleton className="h-40 w-full !rounded-2xl" /><Skeleton className="h-48 w-full !rounded-2xl" /></div>
       ) : (
-        <>
+        <div className="xl:columns-2 xl:gap-4">
           <Card icon="bell" title="Phone & browser alerts">
             <div className="space-y-3 p-4">
               <p className="flex items-center gap-2 text-sm font-bold">
@@ -227,7 +227,7 @@ export default function NotificationSettings() {
               <button className="btn-ghost !px-0 !text-red-600" onClick={() => setForget(true)}><Icon name="trash" size={16} /> {t('Delete my notification data')}</button>
             </div>
           </Card>
-        </>
+        </div>
       )}
 
       <Dialog open={explain} onClose={() => setExplain(false)} title={t('Turn on push notifications?')}>

@@ -160,6 +160,11 @@ async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
   }
 }
 
+export interface PollData {
+  total: number;
+  options: { id: string; label: string; custom: boolean; count: number }[];
+}
+
 export interface FeedParams {
   cursor?: string | null;
   q?: string;
@@ -245,8 +250,9 @@ export const api = {
   unreadCount: () => withDevice((h) => call<{ count: number }>(http.get('/notifications/unread-count', h)), false),
   markRead: (ids: string[]) => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read', { ids }, h)), false),
   markAllRead: () => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read-all', {}, h))),
-  votes: (id: string) => call<{ total: number; counts: Record<string, number> }>(http.get(`/posts/${id}/votes`)),
-  vote: (id: string, choice: string) => withDevice((h) => call<{ total: number; counts: Record<string, number> }>(http.put(`/posts/${id}/vote`, { choice }, h))),
+  votes: (id: string) => call<PollData>(http.get(`/posts/${id}/votes`)),
+  vote: (id: string, optionId: string) => withDevice((h) => call<PollData>(http.put(`/posts/${id}/vote`, { optionId }, h))),
+  addVoteOption: (id: string, label: string) => withDevice((h) => call<PollData>(http.post(`/posts/${id}/votes/options`, { label }, h))),
   follows: () => withDevice((h) => call<FollowedCase[]>(http.get('/follows', h)), false),
   follow: (id: string) => withDevice((h) => call<{ following: true }>(http.put(`/posts/${id}/follow`, {}, h))),
   unfollow: (id: string) => withDevice((h) => call<{ following: false }>(http.delete(`/posts/${id}/follow`, h)), false),
