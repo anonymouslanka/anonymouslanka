@@ -49,9 +49,9 @@ export default function Status() {
   usePageMeta({ title: 'System status', description: 'Live status of the Detective Lanka service: availability, response time and uptime.', path: '/status' });
   const [auto, setAuto] = useState(() => {
     try {
-      return localStorage.getItem('app:status-auto') !== '0';
+      return localStorage.getItem('app:status-auto') === '1'; // off until someone switches it on
     } catch {
-      return true;
+      return false;
     }
   });
   const [busy, setBusy] = useState(true);
@@ -61,6 +61,7 @@ export default function Status() {
   const [last, setLast] = useState<Check | null>(null);
   const [left, setLeft] = useState(INTERVAL);
   const running = useRef(false);
+  const deadline = useRef(0);
 
   const check = useCallback(async () => {
     if (running.current) return;
@@ -76,6 +77,7 @@ export default function Status() {
     if (s.body) setStatus(s.body);
     setHealth(h.body ?? null);
     setLeft(INTERVAL);
+    deadline.current = Date.now() + INTERVAL * 1000; // a manual check also restarts the 3 minute wait
     setBusy(false);
     running.current = false;
   }, []);
@@ -84,18 +86,19 @@ export default function Status() {
     void check();
   }, [check]);
 
-  // countdown + automatic refresh (paused while the tab is hidden or auto-refresh is off)
+  // Automatic check every 3 minutes while it is switched on. It keeps running in a background tab (that is the point:
+  // a regular call stops the free server from going to sleep). The deadline is a timestamp, so browser timer throttling
+  // in background tabs only makes a check a little late, never skips it.
   useEffect(() => {
     if (!auto) return;
+    deadline.current = Date.now() + INTERVAL * 1000;
     const id = setInterval(() => {
-      if (document.visibilityState !== 'visible' || running.current) return;
-      setLeft((l) => {
-        if (l <= 1) {
-          void check();
-          return INTERVAL;
-        }
-        return l - 1;
-      });
+      const remaining = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000));
+      setLeft(remaining);
+      if (remaining === 0 && !running.current) {
+        deadline.current = Date.now() + INTERVAL * 1000;
+        void check();
+      }
     }, 1000);
     return () => clearInterval(id);
   }, [auto, check]);
@@ -123,7 +126,7 @@ export default function Status() {
   return (
     <div className="mx-auto max-w-2xl xl:max-w-4xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">System status</h1>
-      <p className="mt-1.5 text-sm text-ink-soft">Live availability of the Detective Lanka service. This page checks automatically.</p>
+      <p className="mt-1.5 text-sm text-ink-soft">Live availability of the Detective Lanka service. It checks when you open it. Switch on auto-refresh to keep checking every 3 minutes.</p>
 
       <section className={cx('card mt-6 border p-5', tone)} aria-live="polite">
         <div className="flex items-center gap-3">
@@ -161,7 +164,7 @@ export default function Status() {
         >
           <span>
             <span className="block text-sm font-bold">Auto-refresh</span>
-            <span className="block text-xs text-ink-soft">Check again every 3 minutes while this page is open</span>
+            <span className="block text-xs text-ink-soft">Check again every 3 minutes, even in a background tab, while this page stays open. Off by default.</span>
           </span>
           <span className={cx('relative h-8 w-14 shrink-0 rounded-full border transition-colors duration-200 ease-out', auto ? 'border-brand-700 bg-brand-600' : 'border-black/15 bg-stone-300')} aria-hidden="true">
             <span className={cx('absolute top-0.5 left-0.5 h-6.5 w-6.5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out', auto && 'translate-x-6')} />
