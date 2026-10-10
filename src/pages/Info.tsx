@@ -12,7 +12,7 @@ import { usePageMeta } from '../lib/util';
 function Article({ n, icon, title, children }: { n: number; icon: IconName; title: string; children: ReactNode }) {
   const t = useT();
   return (
-    <Reveal>
+    <Reveal className="break-inside-avoid xl:mb-4">
       <section className="card flex gap-4 p-5">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-folder text-[#7a5a14]"><Icon name={icon} size={20} /></span>
         <div className="min-w-0 space-y-2 text-sm leading-relaxed text-ink-soft">
@@ -31,7 +31,7 @@ function Page({ title, intro, children }: { title: string; intro: string; childr
     <div className="mx-auto max-w-3xl xl:max-w-6xl">
       <h1 className="font-display text-3xl font-bold sm:text-4xl">{t(title)}</h1>
       <p className="mt-2 mb-6 text-ink-soft">{t(intro)}</p>
-      <div className="space-y-4 xl:grid xl:grid-cols-2 xl:items-start xl:gap-4 xl:space-y-0">{children}</div>
+      <div className="space-y-4 xl:block xl:columns-2 xl:gap-4 xl:space-y-0">{children}</div>
     </div>
   );
 }
