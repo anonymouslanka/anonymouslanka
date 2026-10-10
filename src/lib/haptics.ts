@@ -71,6 +71,12 @@ export const haptics = {
   success: () => fire(26, 1, 110, true),
   /** Needs attention (confirm a destructive action). */
   warning: () => fire(18),
+  /** Pull to refresh, while pulling: one very light tick at each quarter of the way (never per scroll event). */
+  pullTick: () => fire(4),
+  /** Pull to refresh, the release point is reached: one firm, distinct pulse. */
+  pullReady: () => fire(30, 1, 110, true),
+  /** Pull to refresh finished: two quick light taps, short and crisp. */
+  refreshed: () => fire([10, 45, 14], 2, 70, true),
   /** Failure: two sudden sharp taps in a row, a crack, not a buzz. */
   error: () => fire([22, 55, 22], 2, 75, true),
 };

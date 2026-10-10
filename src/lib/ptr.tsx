@@ -11,6 +11,7 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const pullRef = useRef(0);
+  const stepRef = useRef(0); // quarters of the pull already ticked (0 to 3), 4 = threshold reached
   const cb = useRef(onRefresh);
   cb.current = onRefresh;
 
@@ -22,6 +23,7 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
       if (window.scrollY <= 0 && e.touches[0]) {
         startY = e.touches[0].clientY;
         active = true;
+        stepRef.current = 0;
       }
     };
     const move = (e: TouchEvent) => {
@@ -30,12 +32,20 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
       if (dy <= 0) {
         active = false;
         pullRef.current = 0;
+        stepRef.current = 0;
         setPull(0);
         return;
       }
-      const before = pullRef.current;
       pullRef.current = Math.min(dy * 0.5, 96);
-      if (before < THRESHOLD && pullRef.current >= THRESHOLD) haptics.tap();
+      // Haptics only at meaningful points: a light tick at 25 / 50 / 75 %, one firm pulse at the threshold.
+      const step = pullRef.current >= THRESHOLD ? 4 : Math.floor((pullRef.current / THRESHOLD) * 4);
+      if (step > stepRef.current) {
+        if (step === 4) haptics.pullReady();
+        else if (step >= 1) haptics.pullTick();
+        stepRef.current = step;
+      } else if (step < 4 && stepRef.current === 4 && pullRef.current < THRESHOLD * 0.85) {
+        stepRef.current = 3; // pulled back above the line: re-arm quietly, the pulse can fire again
+      }
       setPull(pullRef.current);
     };
     const end = async () => {
@@ -43,12 +53,14 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
       active = false;
       const reached = pullRef.current >= THRESHOLD;
       pullRef.current = 0;
+      stepRef.current = 0;
       setPull(0);
       if (reached) {
         setRefreshing(true);
         try {
           // keep the spinner up for at least a moment so a very fast reload is still noticed
           await Promise.all([cb.current(), new Promise((r) => setTimeout(r, 700))]);
+          haptics.refreshed();
         } finally {
           setRefreshing(false);
         }
