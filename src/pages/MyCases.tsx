@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CaseTracker } from '../components/CaseTracker';
 import { Icon } from '../components/Icon';
-import { Dialog, EmptyState, Skeleton, Spinner, StatusBadge, useToast } from '../components/ui';
+import { ImportAccessFile } from '../components/ImportAccessFile';
+import { EmptyState, Skeleton, StatusBadge } from '../components/ui';
 import { api, ApiError } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { Stagger, StaggerItem } from '../lib/motion';
-import { KeyFileError, ParsedKeyFile, readKeyFile } from '../lib/keyfile';
 import { storage } from '../lib/storage';
 import type { OwnerComment, OwnerPost } from '../lib/types';
 import { caseNo, formatDate, timeAgo, usePageMeta } from '../lib/util';
@@ -15,13 +15,9 @@ type Row = { id: string; post?: OwnerPost; problem?: string };
 
 export default function MyCases() {
   usePageMeta({ title: 'My cases', description: 'Cases and statements saved on this device.', noindex: true });
-  const toast = useToast();
   const t = useT();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [statements, setStatements] = useState<OwnerComment[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [pending, setPending] = useState<ParsedKeyFile | null>(null);
-  const [filePw, setFilePw] = useState('');
 
   const load = useCallback(async () => {
     const ids = storage.listPostIds();
@@ -61,43 +57,6 @@ export default function MyCases() {
     void load();
   }, [load]);
 
-  /** Reads an access file in the browser (it is never uploaded), unseals the key and checks it with the owner request. */
-  const finishImport = async (parsed: ParsedKeyFile, password?: string) => {
-    setBusy(true);
-    try {
-      const p = await parsed.open(password);
-      if (p.kind === 'case') {
-        await api.getOwnerPost(p.id, p.key);
-        storage.savePostKey(p.id, p.key);
-        toast('success', t('Case added to this device.'));
-      } else {
-        const c = await api.getOwnerComment(p.id, p.key);
-        storage.saveCommentKey(c.postId, p.id, p.key);
-        toast('success', t('Statement added to this device.'));
-      }
-      setPending(null);
-      setFilePw('');
-      await load();
-    } catch (err) {
-      if (err instanceof KeyFileError) toast('error', t(err.message));
-      else toast('error', (err as ApiError).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const pickFile = async (file: File | undefined) => {
-    if (!file) return;
-    try {
-      const parsed = await readKeyFile(file);
-      if (parsed.passwordProtected) {
-        setPending(parsed);
-        setFilePw('');
-      } else await finishImport(parsed);
-    } catch (err) {
-      toast('error', err instanceof KeyFileError ? t(err.message) : t('This file could not be read.'));
-    }
-  };
 
 
   return (
@@ -169,18 +128,8 @@ export default function MyCases() {
       <section className="card mt-10 space-y-3 p-5">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold"><Icon name="key" size={20} /> {t('Use your access file on this device')}</h2>
         <p className="text-sm text-ink-soft">{t('Choose the access file you downloaded when you posted. It is read inside this browser and is never uploaded.')}</p>
-        <label className="btn-primary cursor-pointer">
-          <Icon name="upload" size={18} /> {t('Import access file')}
-          <input type="file" accept=".txt,text/plain" className="sr-only" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ''; }} />
-        </label>
+        <ImportAccessFile onImported={() => void load()} />
       </section>
-      <Dialog open={pending !== null} onClose={() => { setPending(null); setFilePw(''); }} title={t('This file has a password')}>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (pending) void finishImport(pending, filePw); }}>
-          <p className="text-sm text-ink-soft">{t('Type the password you chose when you downloaded it.')}</p>
-          <input className="input" type="password" autoComplete="current-password" autoFocus required value={filePw} onChange={(e) => setFilePw(e.target.value)} aria-label={t('Password')} />
-          <button className="btn-primary w-full" disabled={busy}>{busy && <Spinner />} {t('Unlock')}</button>
-        </form>
-      </Dialog>
     </div>
   );
 }

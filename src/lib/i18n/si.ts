@@ -469,5 +469,8 @@ const si: Record<string, string> = {
   "This access file version is not supported.": "මෙම ප්‍රවේශ ගොනු අනුවාදයට සහාය නොදක්වයි.",
   "This file needs its password.": "මෙම ගොනුවට එහි මුරපදය අවශ්‍යයි.",
   "That password is not correct.": "එම මුරපදය නිවැරදි නොවේ.",
+  "Use your access file": "ඔබේ ප්‍රවේශ ගොනුව භාවිත කරන්න",
+  "This device does not have the access for this case. Choose the access file you downloaded when you opened it. It is read inside this browser and never uploaded.": "මෙම නඩුව සඳහා මෙම උපාංගයට ප්‍රවේශයක් නැත. ඔබ නඩුව විවෘත කළ විට බාගත කළ ප්‍රවේශ ගොනුව තෝරන්න. එය මෙම බ්‍රවුසරය තුළ කියවෙන අතර කිසිවිටක උඩුගත නොකෙරේ.",
+  "This access file belongs to a different case.": "මෙම ප්‍රවේශ ගොනුව වෙනත් නඩුවකට අයත්ය.",
 };
 export default si;

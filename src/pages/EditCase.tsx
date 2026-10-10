@@ -1,7 +1,8 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CaseForm } from '../components/CaseForm';
 import { CaseTracker } from '../components/CaseTracker';
+import { ImportAccessFile } from '../components/ImportAccessFile';
 import { Icon } from '../components/Icon';
 import { ConfirmDialog, EmptyState, ErrorState, Skeleton, StatusBadge, useToast } from '../components/ui';
 import { api, ApiError } from '../lib/api';
@@ -17,7 +18,6 @@ export default function EditCase() {
   const navigate = useNavigate();
   const toast = useToast();
   const [key, setKey] = useState<string | null>(() => storage.getPostKey(id));
-  const [keyInput, setKeyInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [progress] = useState<number | null>(null);
   const [saveError, setSaveError] = useState<ApiError | null>(null);
@@ -26,19 +26,14 @@ export default function EditCase() {
   const { data: post, error, loading, reload, setData } = useAsync(async () => (key ? api.getOwnerPost(id, key) : null), [id, key]);
 
   if (!key) {
-    const useKey = (e: FormEvent) => {
-      e.preventDefault();
-      setKey(keyInput.trim());
-    };
     return (
       <div className="mx-auto max-w-md">
-        <form onSubmit={useKey} className="card space-y-4 p-6">
+        <div className="card space-y-4 p-6">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-folder text-[#7a5a14]"><Icon name="key" size={24} /></span>
-          <h1 className="font-display text-2xl font-bold">{t('Enter your case key')}</h1>
-          <p className="text-sm text-ink-soft">{t('This device doesn’t have the key for this case. Paste the key you saved when you opened it.')}</p>
-          <input className="input font-code" required value={keyInput} onChange={(e) => setKeyInput(e.target.value)} aria-label={t('Case key')} autoComplete="off" autoCapitalize="none" spellCheck={false} />
-          <button className="btn-primary w-full">{t('Continue')}</button>
-        </form>
+          <h1 className="font-display text-2xl font-bold">{t('Use your access file')}</h1>
+          <p className="text-sm text-ink-soft">{t('This device does not have the access for this case. Choose the access file you downloaded when you opened it. It is read inside this browser and never uploaded.')}</p>
+          <ImportAccessFile expectCase={id} onImported={() => setKey(storage.getPostKey(id))} className="btn-primary w-full" />
+        </div>
       </div>
     );
   }

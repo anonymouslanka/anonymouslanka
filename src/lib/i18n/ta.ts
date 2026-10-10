@@ -469,5 +469,8 @@ const ta: Record<string, string> = {
   "This access file version is not supported.": "இந்த அணுகல் கோப்பு பதிப்பு ஆதரிக்கப்படவில்லை.",
   "This file needs its password.": "இந்தக் கோப்புக்கு அதன் கடவுச்சொல் தேவை.",
   "That password is not correct.": "அந்தக் கடவுச்சொல் சரியில்லை.",
+  "Use your access file": "உங்கள் அணுகல் கோப்பைப் பயன்படுத்தவும்",
+  "This device does not have the access for this case. Choose the access file you downloaded when you opened it. It is read inside this browser and never uploaded.": "இந்த வழக்குக்கான அணுகல் இந்தச் சாதனத்தில் இல்லை. வழக்கைத் திறந்தபோது பதிவிறக்கிய அணுகல் கோப்பைத் தேர்ந்தெடுக்கவும். அது இந்த உலாவிக்குள்ளேயே படிக்கப்படும், ஒருபோதும் பதிவேற்றப்படாது.",
+  "This access file belongs to a different case.": "இந்த அணுகல் கோப்பு வேறொரு வழக்குக்கு உரியது.",
 };
 export default ta;
