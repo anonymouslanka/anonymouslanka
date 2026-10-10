@@ -68,7 +68,7 @@ export function CaseForm({
 }) {
   const tr = useT();
   const toast = useToast();
-  const categories = useAsync(() => api.categories(), []);
+  const categories = useAsync(() => api.categories(), [], api.peekCategories());
   const draft = useRef(initial ? null : readDraft());
   const [title, setTitle] = useState(initial?.title ?? draft.current?.title ?? '');
   const [content, setContent] = useState(initial?.content ?? draft.current?.content ?? '');

@@ -26,7 +26,7 @@ const readMine = (id: string): string | null => {
 export function PunishmentPoll({ postId }: { postId: string }) {
   const t = useT();
   const toast = useToast();
-  const [poll, setPoll] = useState<Poll | null>(null);
+  const [poll, setPoll] = useState<Poll | null>(() => api.peekVotes(postId) ?? null);
   const [mine, setMine] = useState<string | null>(() => readMine(postId));
   const [show, setShow] = useState(() => readMine(postId) !== null);
   const [busy, setBusy] = useState(false);

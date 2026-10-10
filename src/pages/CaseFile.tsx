@@ -28,7 +28,7 @@ export default function CaseFile() {
   const { id = '' } = useParams();
   const toast = useToast();
   const t = useT();
-  const { data: post, error, loading, reload } = useAsync(() => api.getPost(id), [id]);
+  const { data: post, error, loading, reload } = useAsync(() => api.getPost(id), [id], api.peekPost(id));
   const [viewer, setViewer] = useState<number | null>(null);
   const [composer, setComposer] = useState(false);
   const [reporting, setReporting] = useState(false);

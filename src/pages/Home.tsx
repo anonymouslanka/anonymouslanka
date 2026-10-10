@@ -1,16 +1,27 @@
-import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Link, useNavigationType, useSearchParams } from 'react-router-dom';
 import { CaseCard } from '../components/CaseCard';
 import { Icon } from '../components/Icon';
 import { InstallCard } from '../components/Pwa';
 import { CaseRowSkeleton, Dialog, EmptyState, ErrorState } from '../components/ui';
-import { api, ApiError } from '../lib/api';
+import { api, ApiError, forget } from '../lib/api';
 import { useAsync } from '../lib/hooks';
 import { useT } from '../lib/i18n';
 import { Stagger } from '../lib/motion';
 import { PullIndicator, usePullToRefresh } from '../lib/ptr';
 import type { PostSummary } from '../lib/types';
 import { cx, useDebounced, usePageMeta } from '../lib/util';
+
+/** What the list looked like when you left (per filter combination), so coming back is instant and lands where you were. */
+interface HomeSnap {
+  items: PostSummary[];
+  cursor: string | null;
+  hasMore: boolean;
+  scroll: number;
+  at: number;
+}
+const homeSnap = new Map<string, HomeSnap>();
+const SNAP_FRESH_MS = 60_000;
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
@@ -46,7 +57,7 @@ export default function Home() {
 
   usePageMeta({ description: 'Browse moderated, anonymous case files about crime in Sri Lanka, or open a case yourself without an account.', path: '/' });
 
-  const categories = useAsync(() => api.categories(), []);
+  const categories = useAsync(() => api.categories(), [], api.peekCategories());
 
   const setParam = useCallback(
     (patch: Record<string, string>) => {
@@ -65,10 +76,16 @@ export default function Home() {
     if (debounced !== qParam) setParam({ q: debounced });
   }, [debounced]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [items, setItems] = useState<PostSummary[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const navType = useNavigationType();
+  const snapKey = `${qParam}|${category}|${tag}|${sort}|${exhibits}`;
+  const snap = useRef(homeSnap.get(snapKey));
+  const fetchedAt = useRef(snap.current?.at ?? 0);
+  const firstRun = useRef(true);
+  const [instant, setInstant] = useState(Boolean(snap.current)); // restored lists do not replay the entrance animation
+  const [items, setItems] = useState<PostSummary[]>(snap.current?.items ?? []);
+  const [cursor, setCursor] = useState<string | null>(snap.current?.cursor ?? null);
+  const [hasMore, setHasMore] = useState(snap.current?.hasMore ?? false);
+  const [loading, setLoading] = useState(!snap.current);
   const [error, setError] = useState<ApiError | null>(null);
   const [moreError, setMoreError] = useState(false);
   const seq = useRef(0);
@@ -83,6 +100,7 @@ export default function Home() {
       try {
         const page = await api.listPosts({ cursor: next, q: qParam, category, tag, sort, exhibits, limit: 12 });
         if (id !== seq.current) return;
+        fetchedAt.current = Date.now();
         setItems((prev) => (next ? [...prev, ...page.items] : page.items));
         setCursor(page.meta.nextCursor);
         setHasMore(page.meta.hasMore);
@@ -99,9 +117,40 @@ export default function Home() {
   );
 
   useEffect(() => {
-    setItems([]);
-    void load(null);
-  }, [load]);
+    const restored = firstRun.current ? homeSnap.get(snapKey) : undefined;
+    firstRun.current = false;
+    if (restored && Date.now() - restored.at < SNAP_FRESH_MS) return; // fresh copy already on screen: no request at all
+    if (!restored) {
+      setItems([]);
+      setInstant(false);
+    }
+    void load(null); // stale copy stays visible while the new first page arrives
+  }, [load]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // remember the list for the next visit (position is kept up to date by the scroll listener below)
+  useEffect(() => {
+    if (items.length === 0) return;
+    homeSnap.set(snapKey, { items, cursor, hasMore, scroll: homeSnap.get(snapKey)?.scroll ?? 0, at: fetchedAt.current || Date.now() });
+  }, [items, cursor, hasMore, snapKey]);
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const s = homeSnap.get(snapKey);
+        if (s) s.scroll = window.scrollY;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [snapKey]);
+  // Back / forward returns to where you were; tapping a tab starts at the top (the list itself is still instant)
+  useLayoutEffect(() => {
+    if (navType === 'POP' && snap.current && snap.current.scroll > 0) window.scrollTo(0, snap.current.scroll);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Endless scroll: the next page is requested while the reader is still ~1.5 screens away from the end, so they never wait or press anything.
   useEffect(() => {
@@ -121,7 +170,7 @@ export default function Home() {
     return () => io.disconnect();
   }, [hasMore, loading, moreError, cursor, load, items.length]);
 
-  const { pull, refreshing } = usePullToRefresh(() => load(null));
+  const { pull, refreshing } = usePullToRefresh(() => { forget('feed:'); return load(null); });
 
   const activeFilters = (sort === 'oldest' ? 1 : 0) + (exhibits ? 1 : 0) + (tag ? 1 : 0);
   const filtered = Boolean(qParam || category || activeFilters);
@@ -185,7 +234,7 @@ export default function Home() {
               />
             )}
             {items.length > 0 && (
-              <Stagger key={gridKey} className="grid gap-3.5 xl:grid-cols-2 2xl:grid-cols-3">
+              <Stagger key={gridKey} className={cx('grid gap-3.5 xl:grid-cols-2 2xl:grid-cols-3', instant && 'stagger-instant')}>
                 {items.map((p) => <CaseCard key={p.id} post={p} />)}
               </Stagger>
             )}

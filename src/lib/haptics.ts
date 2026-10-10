@@ -62,6 +62,9 @@ function fire(pattern: number | number[], ticks = 1, gap = 110, force = false): 
   for (let i = 1; i < ticks; i++) setTimeout(iosTick, i * gap);
 }
 
+/** Android and desktop Chromium can vibrate on their own; iPhone Safari can only tick inside a real tap or release. */
+export const canVibrate = (): boolean => typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+
 export const haptics = {
   /** Button / link press. */
   tap: () => fire(8),
@@ -72,9 +75,9 @@ export const haptics = {
   /** Needs attention (confirm a destructive action). */
   warning: () => fire(18),
   /** Pull to refresh, while pulling: one very light tick at each quarter of the way (never per scroll event). */
-  pullTick: () => fire(4),
+  pullTick: () => fire(9),
   /** Pull to refresh, the release point is reached: one firm, distinct pulse. */
-  pullReady: () => fire(30, 1, 110, true),
+  pullReady: () => fire(35, 1, 110, true),
   /** Pull to refresh finished: two quick light taps, short and crisp. */
   refreshed: () => fire([10, 45, 14], 2, 70, true),
   /** Failure: two sudden sharp taps in a row, a crack, not a buzz. */

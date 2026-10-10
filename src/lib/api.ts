@@ -146,18 +146,49 @@ function cacheWrite(key: string, data: unknown): void {
 }
 const isOffline = (e: unknown) => e instanceof ApiError && (e.code === 'NETWORK_ERROR' || e.code === 'TIMEOUT');
 
+/**
+ * Memory cache for public reads. Going back to a page you just left no longer calls the server again:
+ * results stay fresh for a short while (case lists 60 s, case files 60 s, statements 30 s, poll 20 s, case types 10 min),
+ * two components asking for the same thing at once share one request, and any write (post, edit, delete, vote, report)
+ * drops the entries it could have changed. `peek` gives the last value of any age so a screen can paint at once while it
+ * refreshes in the background.
+ */
+const memo = new Map<string, { at: number; data: unknown }>();
+const flights = new Map<string, Promise<unknown>>();
+const TTL: [string, number][] = [['categories', 600_000], ['feed:', 60_000], ['case:', 60_000], ['statements:', 30_000], ['poll:', 20_000], ['announcement:', 300_000]];
+const ttlOf = (key: string): number => TTL.find(([p]) => key.startsWith(p))?.[1] ?? 30_000;
+export const peek = <T>(key: string): T | undefined => memo.get(key)?.data as T | undefined;
+export function forget(...prefixes: string[]): void {
+  for (const k of [...memo.keys()]) if (prefixes.some((p) => k.startsWith(p))) memo.delete(k);
+}
+const remember = (key: string, data: unknown) => {
+  memo.set(key, { at: Date.now(), data });
+  if (memo.size > 120) memo.delete(memo.keys().next().value as string);
+};
+
 async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
-  try {
-    const data = await load();
-    cacheWrite(key, data);
-    return data;
-  } catch (e) {
-    if (isOffline(e)) {
-      const hit = cacheRead<T>(key);
-      if (hit !== null) return hit;
+  const hit = memo.get(key);
+  if (hit && Date.now() - hit.at < ttlOf(key)) return hit.data as T;
+  const flying = flights.get(key);
+  if (flying) return flying as Promise<T>;
+  const p = (async () => {
+    try {
+      const data = await load();
+      remember(key, data);
+      cacheWrite(key, data);
+      return data;
+    } catch (e) {
+      if (isOffline(e)) {
+        const old = cacheRead<T>(key);
+        if (old !== null) return old;
+      }
+      throw e;
+    } finally {
+      flights.delete(key);
     }
-    throw e;
-  }
+  })();
+  flights.set(key, p);
+  return p;
 }
 
 export interface PollData {
@@ -250,9 +281,13 @@ export const api = {
   unreadCount: () => withDevice((h) => call<{ count: number }>(http.get('/notifications/unread-count', h)), false),
   markRead: (ids: string[]) => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read', { ids }, h)), false),
   markAllRead: () => withDevice((h) => call<{ ok: true }>(http.post('/notifications/read-all', {}, h))),
-  votes: (id: string) => call<PollData>(http.get(`/posts/${id}/votes`)),
-  vote: (id: string, optionId: string) => withDevice((h) => call<PollData>(http.put(`/posts/${id}/vote`, { optionId }, h))),
-  addVoteOption: (id: string, label: string) => withDevice((h) => call<PollData>(http.post(`/posts/${id}/votes/options`, { label }, h))),
+  votes: (id: string) => cached(`poll:${id}`, () => call<PollData>(http.get(`/posts/${id}/votes`))),
+  peekVotes: (id: string) => peek<PollData>(`poll:${id}`),
+  peekPost: (id: string) => peek<PostDetail>(`case:${id}`),
+  peekCategories: () => peek<Category[]>('categories'),
+  peekStatements: (postId: string) => peek<Page<PublicComment>>(`statements:${postId}:`),
+  vote: (id: string, optionId: string) => withDevice((h) => call<PollData>(http.put(`/posts/${id}/vote`, { optionId }, h))).then((r) => (remember(`poll:${id}`, r), r)),
+  addVoteOption: (id: string, label: string) => withDevice((h) => call<PollData>(http.post(`/posts/${id}/votes/options`, { label }, h))).then((r) => (remember(`poll:${id}`, r), r)),
   follows: () => withDevice((h) => call<FollowedCase[]>(http.get('/follows', h)), false),
   follow: (id: string) => withDevice((h) => call<{ following: true }>(http.put(`/posts/${id}/follow`, {}, h))),
   unfollow: (id: string) => withDevice((h) => call<{ following: false }>(http.delete(`/posts/${id}/follow`, h)), false),
@@ -269,18 +304,18 @@ export const api = {
     ),
   getPost: (id: string) => cached(`case:${id}`, () => call<PostDetail>(http.get(`/posts/${id}`))),
   createPost: (form: FormData, onProgress?: (pct: number) => void) =>
-    call<{ post: OwnerPost; editKey: string }>(http.post('/posts', form, { timeout: 120_000, onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)) })),
+    call<{ post: OwnerPost; editKey: string }>(http.post('/posts', form, { timeout: 120_000, onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)) })).then((r) => (forget('feed:', 'categories'), r)),
   getOwnerPost: (id: string, key: string) => call<OwnerPost>(http.get(`/posts/${id}/owner`, keyHeader(key))),
-  updatePost: (id: string, key: string, form: FormData) => call<OwnerPost>(http.patch(`/posts/${id}`, form, keyHeader(key))),
-  deletePost: (id: string, key: string) => call<{ deleted: true }>(http.delete(`/posts/${id}`, keyHeader(key))),
+  updatePost: (id: string, key: string, form: FormData) => call<OwnerPost>(http.patch(`/posts/${id}`, form, keyHeader(key))).then((r) => (forget('feed:', 'case:'), r)),
+  deletePost: (id: string, key: string) => call<{ deleted: true }>(http.delete(`/posts/${id}`, keyHeader(key))).then((r) => (forget('feed:', 'case:', 'statements:', 'poll:'), r)),
 
   listComments: (postId: string, cursor?: string | null) =>
     cached(`statements:${postId}:${cursor ?? ''}`, () => callPage<PublicComment>(http.get(`/posts/${postId}/comments`, { params: { cursor: cursor || undefined } }))),
   createComment: (postId: string, form: FormData, onProgress?: (pct: number) => void) =>
-    call<{ comment: OwnerComment; editKey: string }>(http.post(`/posts/${postId}/comments`, form, { timeout: 120_000, onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)) })),
-  reportPost: (id: string) => call<{ reported: true; hidden: boolean; duplicate?: boolean }>(http.post(`/posts/${id}/report`)),
-  reportComment: (id: string) => call<{ reported: true; hidden: boolean; duplicate?: boolean }>(http.post(`/comments/${id}/report`)),
+    call<{ comment: OwnerComment; editKey: string }>(http.post(`/posts/${postId}/comments`, form, { timeout: 120_000, onUploadProgress: (e) => e.total && onProgress?.(Math.round((e.loaded / e.total) * 100)) })).then((r) => (forget(`statements:${postId}`, `case:${postId}`, 'feed:'), r)),
+  reportPost: (id: string) => call<{ reported: true; hidden: boolean; duplicate?: boolean }>(http.post(`/posts/${id}/report`)).then((r) => (forget('feed:', `case:${id}`), r)),
+  reportComment: (id: string) => call<{ reported: true; hidden: boolean; duplicate?: boolean }>(http.post(`/comments/${id}/report`)).then((r) => (forget('statements:', 'case:'), r)),
   getOwnerComment: (id: string, key: string) => call<OwnerComment>(http.get(`/comments/${id}/owner`, keyHeader(key))),
-  updateComment: (id: string, key: string, form: FormData) => call<OwnerComment>(http.patch(`/comments/${id}`, form, keyHeader(key))),
-  deleteComment: (id: string, key: string) => call<{ deleted: true }>(http.delete(`/comments/${id}`, keyHeader(key))),
+  updateComment: (id: string, key: string, form: FormData) => call<OwnerComment>(http.patch(`/comments/${id}`, form, keyHeader(key))).then((r) => (forget('statements:', 'case:'), r)),
+  deleteComment: (id: string, key: string) => call<{ deleted: true }>(http.delete(`/comments/${id}`, keyHeader(key))).then((r) => (forget('statements:', 'case:', 'feed:'), r)),
 };

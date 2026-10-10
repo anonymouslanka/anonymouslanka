@@ -384,3 +384,5 @@ html[lang='si'] .tab-label { font-size: 0.62rem; }
 /* pull to refresh: the ring fills while you pull, pops at the threshold and spins while loading */
 @keyframes ptr-pop { 0% { scale: 1; } 50% { scale: 1.22; } 100% { scale: 1; } }
 .ptr-ready { animation: ptr-pop 0.25s ease-out; }
+
+.stagger.stagger-instant > * { animation: none; }

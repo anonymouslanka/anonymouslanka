@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../lib/api';
 import { Stagger, StaggerItem } from '../lib/motion';
 import { storage } from '../lib/storage';
@@ -41,9 +41,10 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
   const toast = useToast();
   const t = useT();
   const [items, setItems] = useState<PublicComment[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const warm = useRef(api.peekStatements(postId));
+  const [cursor, setCursor] = useState<string | null>(warm.current?.meta.nextCursor ?? null);
+  const [hasMore, setHasMore] = useState(warm.current?.meta.hasMore ?? false);
+  const [loading, setLoading] = useState(!warm.current);
   const [error, setError] = useState<ApiError | null>(null);
 
   const [mine, setMine] = useState<OwnerComment[]>([]);
@@ -66,7 +67,8 @@ export function Statements({ postId, composerOpen, setComposerOpen }: { postId: 
 
   const load = useCallback(
     async (next?: string | null) => {
-      setLoading(true);
+      if (warm.current) warm.current = undefined; // first load with a warm copy: no loading state
+      else setLoading(true);
       setError(null);
       try {
         const page = await api.listComments(postId, next);

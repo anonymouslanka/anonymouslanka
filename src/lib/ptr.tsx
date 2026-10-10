@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { haptics } from './haptics';
+import { canVibrate, haptics } from './haptics';
 
 const THRESHOLD = 64;
 
@@ -56,6 +56,8 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown> | unknown) {
       stepRef.current = 0;
       setPull(0);
       if (reached) {
+        // iPhone Safari only plays a haptic inside a real gesture. Lifting the finger is one, so the "refresh starts" pulse goes here.
+        if (!canVibrate()) haptics.pullReady();
         setRefreshing(true);
         try {
           // keep the spinner up for at least a moment so a very fast reload is still noticed

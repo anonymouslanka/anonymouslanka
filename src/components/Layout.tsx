@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { IoLanguage } from 'react-icons/io5';
-import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate, useNavigationType, useOutlet } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import { preloadPages } from '../lib/preload';
 import { resyncPush, UnreadCtx, useUnreadProvider } from '../lib/notify';
@@ -105,6 +105,7 @@ function TabItem({ to, label, icon, end, motion }: { to: string; label: string; 
 
 export function Layout() {
   const { pathname } = useLocation();
+  const navType = useNavigationType();
   const navigate = useNavigate();
   const outlet = useOutlet();
   const { installable, install, standalone } = usePwa();
@@ -119,8 +120,9 @@ export function Layout() {
   const goBack = () => (typeof window.history.state?.idx === 'number' && window.history.state.idx > 0 ? navigate(-1) : navigate('/'));
 
   useEffect(() => {
+    if (navType === 'POP' && pathname === '/') return; // Home puts you back where you were
     window.scrollTo({ top: 0 });
-  }, [pathname]);
+  }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     preloadPages();

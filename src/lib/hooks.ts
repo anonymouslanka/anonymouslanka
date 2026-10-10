@@ -10,16 +10,18 @@ export interface AsyncState<T> {
 }
 
 /** Minimal data-loading hook with race protection (stale responses are ignored). */
-export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): AsyncState<T> {
-  const [data, setData] = useState<T | null>(null);
+export function useAsync<T>(fn: () => Promise<T>, deps: unknown[], initial?: T | null): AsyncState<T> {
+  const [data, setData] = useState<T | null>(initial ?? null);
   const [error, setError] = useState<ApiError | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initial == null);
+  const warm = useRef(initial != null);
   const [tick, setTick] = useState(0);
   const run = useRef(0);
 
   useEffect(() => {
     const id = ++run.current;
-    setLoading(true);
+    if (warm.current) warm.current = false; // first run with a warm value: refresh without a loading state
+    else setLoading(true);
     setError(null);
     fn()
       .then((d) => run.current === id && setData(d))
